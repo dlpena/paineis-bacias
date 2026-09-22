@@ -1,0 +1,52 @@
+# Identidade e parâmetros da bacia do Iguaçu. Os textos entram nas páginas por coleta/publica_paginas.py.
+slug: iguacu
+nome: Iguaçu
+rio: rio Iguaçu
+nom_bacia_ons: IGUACU          # coluna nom_bacia dos parquets do ONS
+sin_svg: IGUACU                # nome da bacia no mapa do SIN da página inicial
+dme_cd: "11146"                # SNIRH, camada Meso Região Hidrográfica
+centro: [-25.7, -52.3]
+zoom: 7
+trecho_padrao: baixo-iguacu
+titulo_inicio: O rio Iguaçu agora
+apresentacao: >-
+  A bacia do Iguaçu, da cabeceira perto de Curitiba às Cataratas: seis usinas do ONS e as estações fluviométricas
+  da ANA, com o valor da última hora. Passe o mouse para ler cada ponto.
+resumo_inicial: >-
+  Da cabeceira perto de Curitiba às Cataratas: seis usinas do ONS em cascata, estações fluviométricas da ANA e chuva do MERGE.
+
+# cartão de destaque da página da bacia: o ponto que resume o que sai da bacia
+destaque:
+  rotulo: Chegando às Cataratas
+  trecho: cataratas
+  estacao: "65992502"
+  usina: baixo-iguacu
+
+hidrografia:                   # nome exato na camada do SNIRH -> [rótulo, classe]
+  Rio Iguaçu: [Rio Iguaçu, principal]
+  Rio Chopim: [Rio Chopim, afluente]
+  Rio Capanema: [Rio Capanema, afluente]
+  Rio dos Andradas: [Rio Andrada, afluente]
+  Rio das Cobras: [Rio das Cobras, afluente]
+  # o rio da estação 65975300 ("rio Andrada" no cadastro) consta na camada como Rio São Salvador (conferido em
+  # 14/09/2026 pela área a montante: 1.213 a 1.401 km² na camada contra 1.387 km² no cadastro)
+  Rio São Salvador: [Rio Andrada (São Salvador na base da ANA), afluente]
+
+fontes:
+  usinas: >-
+    Bacia <code>IGUACU</code>: G. B. Munhoz, Segredo, Salto Santiago, Salto Osório, Salto Caxias e Baixo Iguaçu.
+  poligono: >-
+    ANA/SNIRH, serviço "Divisões de bacias hidrográficas", camada Meso Região Hidrográfica, código DME_CD 11146
+    ("Iguaçu"), com 65.741 km² pelo atributo DME_AR_KM2 do próprio serviço.
+  limites: >-
+    Outorgas ANA vigentes, texto lido no DOU: nº 625/2025 (Foz do Areia, revogou a 424/2025), nº 332/2025 (Segredo),
+    nº 556/2025 (Salto Santiago), nº 254/2025 (Salto Osório, revogou a 59/2022), nº 2.590/2019 (Salto Caxias) e
+    nº 2.382/2022 (Baixo Iguaçu). Formulários FSAR-H do sistema do ONS: Baixo Iguaçu e Salto Caxias lidos em
+    12/09/2026 (9383, 9382, 9388 e 9389/2026; 403/2018 e 10844/2026); os 29 aceitos das outras quatro usinas lidos em
+    16/09/2026. Em Foz do Areia, Segredo e Salto Santiago a própria outorga prevê vazão turbinada maior após termo
+    aditivo ao contrato de concessão informado à ANA: o painel mantém o valor menor enquanto não houver confirmação.
+  zeros: >-
+    Já houve zeros espúrios de defluência em Salto Caxias (06/05/2026 e 27/06/2026) enquanto o agente registrava
+    centenas de m³/s.
+rodape_regras: >-
+  Limites lidos nos documentos primários: outorgas vigentes das seis usinas e formulários FSAR-H aceitos no ONS.

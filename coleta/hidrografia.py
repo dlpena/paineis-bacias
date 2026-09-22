@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Hidrografia para os mapas: rio Iguaçu e afluentes monitorados, da camada "Rios principais" do SNIRH/ANA.
+"""Hidrografia para os mapas: rio principal e afluentes monitorados, da camada "Rios principais" do SNIRH/ANA.
 
   https://portal1.snirh.gov.br/arcgis/rest/services/SNIRH2016/Cursos_Agua_dominialidade/FeatureServer/0/query
   (camada "Curso d'Água": NORIOCOMP nome, DEDOMINIAL domínio, NUAREAMONT área a montante em km²)
 
-Consulta por nome, recorta ao polígono da bacia (config/bacia_iguacu.geojson) e grava
-config/hidrografia.geojson (rodar uma vez; os mapas leem docs/data/hidrografia.geojson gerado pelo monta_site).
-Uso: py coleta/hidrografia.py
+Consulta por nome, recorta ao polígono da bacia (config/<bacia>/bacia.geojson) e grava
+config/<bacia>/hidrografia.geojson (rodar uma vez por bacia; os mapas leem docs/<bacia>/data/hidrografia.geojson).
+Uso: BACIA=<slug> py coleta/hidrografia.py
 """
 from __future__ import annotations
 
@@ -19,22 +19,13 @@ import requests
 from matplotlib.path import Path as MplPath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from comum import CONFIG, log  # noqa: E402
+from comum import CONFIG, bacia, log  # noqa: E402
 from geo import aneis  # noqa: E402
 
 URL = "https://portal1.snirh.gov.br/arcgis/rest/services/SNIRH2016/Cursos_Agua_dominialidade/FeatureServer/0/query"
-# nome exato na camada -> rótulo e classe (principal ou afluente monitorado). Só afluentes com estação no painel;
-# o rio Jordão, por exemplo, fica de fora porque não tem estação cadastrada.
-RIOS = {
-    "Rio Iguaçu": ("Rio Iguaçu", "principal"),
-    "Rio Chopim": ("Rio Chopim", "afluente"),
-    "Rio Capanema": ("Rio Capanema", "afluente"),
-    "Rio dos Andradas": ("Rio Andrada", "afluente"),
-    "Rio das Cobras": ("Rio das Cobras", "afluente"),
-    # o rio da estação 65975300 ("rio Andrada" no cadastro da ANA/agente) consta na camada como Rio São Salvador:
-    # verificado em 14/09/2026 pela posição da estação (área a montante 1.213-1.401 km² na camada contra 1.387 km² no cadastro)
-    "Rio São Salvador": ("Rio Andrada (São Salvador na base da ANA)", "afluente"),
-}
+# nome exato na camada -> rótulo e classe (principal ou afluente monitorado), em config/<bacia>/bacia.yaml
+# (chave "hidrografia"). Só afluentes com estação no painel.
+RIOS = {k: tuple(v) for k, v in bacia()["hidrografia"].items()}
 CITACAO = ('ANA/SNIRH, serviço "Rios principais" (SNIRH2016/Rios_principais, camada Curso d\'Água), '
            'https://portal1.snirh.gov.br/arcgis/rest/services/SNIRH2016/Cursos_Agua_dominialidade/FeatureServer')
 
@@ -50,14 +41,24 @@ def dentro_da_bacia(poligonos):
 
 def main() -> int:
     where = " OR ".join(f"NORIOCOMP = '{n}'" for n in RIOS)
-    # f=json (esri): no formato geojson o serviço devolve geometrias nulas
-    r = requests.get(URL, params={"where": where, "outFields": "NORIOCOMP,NUAREAMONT,DEDOMINIAL", "returnGeometry": "true",
-                                  "outSR": "4326", "f": "json"}, timeout=120)
-    r.raise_for_status()
-    gj = r.json()
-    if "error" in gj:
-        raise RuntimeError(gj["error"])
-    pol = list(aneis(CONFIG / "bacia_iguacu.geojson"))
+    pol = list(aneis(CONFIG / "bacia.geojson"))
+    # caixa da bacia como filtro espacial e paginação: sem isso, rios homônimos no país inteiro (Rio Verde,
+    # Rio Pardo...) enchiam o limite de registros do serviço e afluentes da bacia saíam cortados
+    xs = [x for ext, _ in pol for x, _y in ext]; ys = [y for ext, _ in pol for _x, y in ext]
+    caixa = f"{min(xs)},{min(ys)},{max(xs)},{max(ys)}"
+    gj = {"features": []}
+    while True:
+        # f=json (esri): no formato geojson o serviço devolve geometrias nulas
+        r = requests.get(URL, params={"where": where, "outFields": "NORIOCOMP,NUAREAMONT,DEDOMINIAL", "returnGeometry": "true",
+                                      "outSR": "4326", "geometry": caixa, "geometryType": "esriGeometryEnvelope", "inSR": "4326",
+                                      "spatialRel": "esriSpatialRelIntersects", "resultOffset": len(gj["features"]), "f": "json"}, timeout=180)
+        r.raise_for_status()
+        pag = r.json()
+        if "error" in pag:
+            raise RuntimeError(pag["error"])
+        gj["features"] += pag.get("features", [])
+        if not pag.get("exceededTransferLimit"):
+            break
     dentro = dentro_da_bacia(pol)
     saida = []
     for f in gj.get("features", []):
@@ -70,7 +71,7 @@ def main() -> int:
             pts = np.asarray(ln, dtype=float)
             if not len(pts):
                 continue
-            # trecho fica se a maioria dos vértices está dentro da bacia (o Iguaçu tem homônimos fora dela)
+            # trecho fica se a maioria dos vértices está dentro da bacia (há rios homônimos fora dela)
             n_in = sum(dentro(x, y) for x, y in pts[:: max(1, len(pts) // 20)])
             if n_in < max(1, len(pts[:: max(1, len(pts) // 20)]) * 0.6):
                 continue

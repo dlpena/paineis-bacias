@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painéis de bacias</title>
+<link href="https://fonts.googleapis.com/css2?family=Questrial&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+<script src="app.js"></script>
+<style>
+  .inicio { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 22px; align-items: start; margin-top: 14px; }
+  @media (max-width: 900px) { .inicio { grid-template-columns: 1fr; } }
+  .mapa-sin { position: relative; background: var(--cartao); border: 1px solid var(--borda); border-radius: 10px; padding: 14px; }
+  .mapa-sin svg { display: block; width: 100%; height: auto; max-height: 620px; margin: 0 auto; }
+  .brasil { fill: var(--fundo); stroke: #C6D1DE; stroke-width: .8; }
+  .uf { fill: none; stroke: #C6D1DE; stroke-width: .5; }
+  .sub-bacia { stroke: #fff; stroke-width: 2.2; stroke-linejoin: round; fill: #E6ECF3; transition: fill .12s; }
+  .sub-bacia.painel { fill: #BFD5EC; cursor: pointer; }
+  .sub-bacia.painel.acesa { fill: #0193DE; }
+  .contorno-aceso { fill: none; stroke: var(--azul-escuro); stroke-width: 1.8; pointer-events: none; }
+  .rotulo-bacia { position: absolute; pointer-events: none; background: var(--azul-escuro); color: #fff; font-size: 13px; padding: 5px 10px; border-radius: 3px; white-space: nowrap; z-index: 5; }
+  .rotulo-bacia small { color: #BFD5EC; margin-left: 6px; }
+  .legenda-sin { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--texto-suave); margin-top: 8px; }
+  .legenda-sin i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  a.bacia-cartao { display: block; color: inherit; margin-bottom: 14px; border-left: 5px solid var(--azul-claro); }
+  a.bacia-cartao:hover, a.bacia-cartao.acesa { text-decoration: none; border-color: var(--azul-escuro); box-shadow: 0 2px 8px rgba(41,64,134,.14); }
+  .bacia-cartao h2 { font-size: 20px; margin: 0 0 2px; border: 0; padding: 0; color: var(--azul-escuro); }
+  .bacia-cartao .resumo { font-size: 13px; color: var(--texto-suave); margin: 0 0 10px; }
+  .bacia-cartao .numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px 14px; }
+  .bacia-cartao .numeros b { display: block; font-size: 20px; font-weight: normal; color: var(--azul-escuro); }
+  .bacia-cartao .numeros span { font-size: 11.5px; color: var(--texto-suave); }
+  .bacia-cartao .abrir { font-size: 13px; color: var(--azul-medio); margin-top: 10px; }
+</style>
+</head>
+<body>
+<header class="topo"><div class="interno">
+  <a class="marca" href="index.html"><svg viewBox="0 0 60 40"><path d="M2 10 Q15 0 30 10 T58 10" fill="none" stroke="#80B5E1" stroke-width="5" stroke-linecap="round"/><path d="M2 20 Q15 10 30 20 T58 20" fill="none" stroke="#0193DE" stroke-width="5" stroke-linecap="round"/><path d="M2 30 Q15 20 30 30 T58 30" fill="none" stroke="#294086" stroke-width="5" stroke-linecap="round"/></svg><div>Painéis de bacias<small>acompanhamento hidrológico automático</small></div></a>
+</div></header>
+<main>
+  <h1>Bacias acompanhadas</h1>
+  <p class="sub">Cada painel reúne as usinas do ONS, as estações fluviométricas da ANA e a chuva do MERGE de uma bacia, organizados pelo rio, de montante para jusante, com as condicionantes lidas nos documentos primários. Atualização automática a cada hora. Passe o mouse no mapa ou nos cartões; clique para abrir a bacia.</p>
+  <div class="inicio">
+    <div class="mapa-sin"><div id="mapa-sin"></div>
+      <div class="legenda-sin"><span><i style="background:#BFD5EC"></i>bacia com painel</span><span><i style="background:#E6ECF3"></i>demais bacias do SIN, ainda sem painel</span></div>
+      <p class="nota" style="font-size:11.5px;color:var(--texto-suave);margin:6px 0 0">Contornos: {{FONTE_MAPA}}.</p>
+    </div>
+    <div id="cartoes-bacias"></div>
+  </div>
+</main>
+<footer id="rodape"><div class="interno"><p><b>Painel técnico não oficial.</b> Não é produto da Agência Nacional de Águas e Saneamento Básico nem do ONS. Os dados são brutos, sem consistência, e podem ser revisados pelas fontes. Os painéis exibem dado e regra; não concluem descumprimento.</p><p>Código e dados: <a href="https://github.com/dlpena/paineis-bacias">github.com/dlpena/paineis-bacias</a>.</p></div></footer>
+<script>
+const MAPA = {{MAPA_SIN}};
+const BACIAS = {{BACIAS}};
+(async () => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (t, a = {}) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const porSvg = Object.fromEntries(BACIAS.map(b => [b.sin_svg, b]));
+  const host = document.getElementById('mapa-sin');
+  const svg = el('svg', { viewBox: `0 0 ${MAPA.w} ${MAPA.h}`, role: 'img', 'aria-label': 'Mapa das bacias do SIN; as bacias com painel são clicáveis' });
+  svg.append(el('path', { d: MAPA.brasil, class: 'brasil' }));
+  const gB = el('g'), gU = el('g');
+  MAPA.bacias.forEach(s => {
+    const b = porSvg[s.bacia];
+    const p = el('path', { d: s.d, class: 'sub-bacia' + (b ? ' painel' : '') });
+    p.dataset.bacia = s.bacia;
+    const t = el('title'); t.textContent = `Bacia ${MAPA.nomes[s.bacia] || s.bacia}${b ? '' : ' · ainda sem painel'}`; p.append(t);
+    if (b) {
+      p.addEventListener('pointerenter', () => acender(b.slug));
+      p.addEventListener('click', () => { location.href = `${b.slug}/index.html`; });
+    }
+    gB.append(p);
+  });
+  MAPA.ufs.forEach(u => gU.append(el('path', { d: u.d, class: 'uf' })));
+  svg.append(gB, gU);
+  const rot = document.createElement('div'); rot.className = 'rotulo-bacia'; rot.hidden = true;
+  host.append(svg, rot);
+  svg.addEventListener('pointerleave', () => { acender(null); rot.hidden = true; });
+  svg.addEventListener('pointermove', ev => {
+    const p = ev.target.closest('.sub-bacia.painel');
+    if (!p) { rot.hidden = true; return; }
+    const b = porSvg[p.dataset.bacia];
+    rot.innerHTML = `Bacia do ${b.nome}<small>abrir painel</small>`; rot.hidden = false;
+    const r = host.getBoundingClientRect(); let x = ev.clientX - r.left + 14, y = ev.clientY - r.top - 34;
+    if (x + rot.offsetWidth > r.width) x = ev.clientX - r.left - rot.offsetWidth - 14;
+    rot.style.left = Math.max(0, x) + 'px'; rot.style.top = Math.max(0, y) + 'px';
+  });
+  function acender(slug) {
+    svg.querySelectorAll('.contorno-aceso').forEach(e => e.remove());
+    svg.querySelectorAll('.sub-bacia.painel').forEach(p => p.classList.toggle('acesa', !!slug && porSvg[p.dataset.bacia].slug === slug));
+    document.querySelectorAll('.bacia-cartao').forEach(c => c.classList.toggle('acesa', c.dataset.slug === slug));
+    const alvo = slug && svg.querySelector(`.sub-bacia.painel.acesa`);
+    if (alvo) svg.insertBefore(el('path', { d: alvo.getAttribute('d'), class: 'contorno-aceso' }), gU);
+  }
+
+  // cartões: resumo vivo de cada bacia, lido dos mesmos JSON que o painel da bacia usa
+  const ler = async (slug, arq) => { try { const r = await fetch(`${slug}/data/${arq}?v=${Math.floor(Date.now() / 300000)}`); return r.ok ? r.json() : null; } catch (e) { return null; } };
+  const caixa = document.getElementById('cartoes-bacias');
+  for (const b of BACIAS) {
+    const [B, C, A, S] = await Promise.all(['bacia.json', 'chuva.json', 'avisos.json', 'status.json'].map(a => ler(b.slug, a)));
+    const us = B ? B.trechos.filter(t => t.usina).length : null;
+    const est = B ? B.trechos.flatMap(t => t.estacoes) : [];
+    const ativas = est.filter(e => e.frescor_h !== null && e.frescor_h !== undefined && e.frescor_h <= 24).length;
+    const aten = A ? (A.avisos || []).filter(a => a.nivel === 'atencao').length : null;
+    const ac = (C || {}).acumulados || {};
+    const card = document.createElement('a');
+    card.className = 'cartao bacia-cartao'; card.href = `${b.slug}/index.html`; card.dataset.slug = b.slug;
+    card.innerHTML = `<h2>Bacia do ${b.nome}</h2><p class="resumo">${b.resumo_inicial || ''}</p>` + (B ? `<div class="numeros">
+        <div><b>${us}</b><span>usinas do ONS</span></div>
+        <div><b>${ativas} de ${est.length}</b><span>estações com dado nas últimas 24 h</span></div>
+        <div><b>${fmt(ac.d7, 1)} mm</b><span>chuva média em 7 d (MERGE)</span></div>
+        <div><b>${aten ?? '–'}</b><span>avisos de atenção nas últimas 24 h</span></div></div>
+        <div class="abrir">abrir o painel · ONS até ${fmtInst((S && S.ons || {}).ultimo_instante)} ›</div>`
+      : '<p class="sub">Painel em construção.</p>');
+    card.addEventListener('pointerenter', () => acender(b.slug));
+    card.addEventListener('pointerleave', () => acender(null));
+    caixa.append(card);
+  }
+})().catch(e => { document.querySelector('main').insertAdjacentHTML('afterbegin', `<div class="alerta-fixo">Falha ao montar a página: ${e.message}</div>`); console.error(e); });
+</script>
+</body>
+</html>

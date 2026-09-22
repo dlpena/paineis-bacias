@@ -1,6 +1,6 @@
-name: Atualiza painel
+name: Atualiza painéis
 
-# Disparo principal: cron-job.org -> repository_dispatch (o schedule nativo do Actions pode atrasar
+# Disparo principal: cron-job.org -> workflow_dispatch (o schedule nativo do Actions pode atrasar
 # mais de 1 h em repositório gratuito; fica como rede de segurança).
 on:
   repository_dispatch:
@@ -9,6 +9,10 @@ on:
     - cron: '7 * * * *'
   workflow_dispatch:
     inputs:
+      bacias:
+        description: 'Bacias a atualizar, separadas por espaço (vazio = todas de config/bacias.yaml)'
+        required: false
+        default: ''
       backfill_ons:
         description: 'Backfill horário do ONS a partir de AAAA-MM (vazio = só mês corrente e anterior)'
         required: false
@@ -32,7 +36,7 @@ permissions:
 jobs:
   atualiza:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
 
@@ -44,36 +48,37 @@ jobs:
       - name: Instalar dependências
         run: pip install -r requirements.txt
 
-      - name: ONS (horário e diário)
-        continue-on-error: true
+      - name: Coletar e montar cada bacia
         run: |
-          if [ -n "${{ github.event.inputs.backfill_ons }}" ]; then
-            python coleta/ons.py --desde "${{ github.event.inputs.backfill_ons }}"
-          else
-            python coleta/ons.py
+          BACIAS="${{ github.event.inputs.bacias }}"
+          if [ -z "$BACIAS" ]; then
+            BACIAS=$(python -c "import yaml;print(' '.join(b['slug'] for b in yaml.safe_load(open('config/bacias.yaml'))['bacias']))")
           fi
-
-      - name: Telemetria ANA
-        continue-on-error: true
-        run: python coleta/telemetria.py --dias "${{ github.event.inputs.dias_telemetria || '7' }}"
-
-      - name: MERGE/INPE
-        continue-on-error: true
-        run: |
-          if [ -n "${{ github.event.inputs.merge_desde }}" ]; then
-            python coleta/merge.py --desde "${{ github.event.inputs.merge_desde }}"
-          else
-            python coleta/merge.py
-          fi
-
-      - name: Montar site
-        run: python coleta/monta_site.py
+          for B in $BACIAS; do
+            echo "::group::$B"
+            export BACIA=$B
+            # cada fonte pode falhar sem derrubar as outras: o status.json da bacia registra a falha
+            if [ -n "${{ github.event.inputs.backfill_ons }}" ]; then
+              python coleta/ons.py --desde "${{ github.event.inputs.backfill_ons }}" || echo "ONS falhou em $B"
+            else
+              python coleta/ons.py || echo "ONS falhou em $B"
+            fi
+            python coleta/telemetria.py --dias "${{ github.event.inputs.dias_telemetria || '7' }}" || echo "telemetria falhou em $B"
+            if [ -n "${{ github.event.inputs.merge_desde }}" ]; then
+              python coleta/merge.py --desde "${{ github.event.inputs.merge_desde }}" || echo "MERGE falhou em $B"
+            else
+              python coleta/merge.py || echo "MERGE falhou em $B"
+            fi
+            python coleta/monta_site.py
+            echo "::endgroup::"
+          done
+          python coleta/publica_inicio.py
 
       - name: Publicar dados
         run: |
-          git config user.name "painel-iguacu[bot]"
-          git config user.email "painel-iguacu@users.noreply.github.com"
-          git add dados docs/data
+          git config user.name "paineis-bacias[bot]"
+          git config user.email "paineis-bacias@users.noreply.github.com"
+          git add dados docs
           if git diff --cached --quiet; then
             echo "sem mudanças"; exit 0
           fi

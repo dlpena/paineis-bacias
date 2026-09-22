@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel {{NOME}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Questrial&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="estilo.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</head>
+<body>
+<header id="topo" class="topo"></header>
+<main>
+  <h1>{{TITULO_INICIO}}</h1>
+  <p class="sub">{{APRESENTACAO}}</p>
+
+  <div id="mapa"></div>
+
+  <h2>O rio em sequência</h2>
+  <p class="sub" style="margin-bottom:8px">Os mesmos pontos em ordem de rio, da cabeceira (direita) à foz (esquerda), como no mapa. Cada faixa é um trecho: clique na faixa ou na usina para abrir o trecho, ou numa estação para abrir a estação.</p>
+  <div class="cartao" style="padding:10px 8px 4px">
+    <div class="esquema-wrap"><div id="esquema"></div></div>
+    <div id="legenda-esquema"></div>
+  </div>
+
+  <div id="cartoes" class="grade c3" style="margin-top:14px"></div>
+
+  <h2>Para olhar (últimas 24 h)</h2>
+  <div id="avisos"></div>
+</main>
+<footer id="rodape"></footer>
+<script>
+(async () => {
+  await iniciar('index.html');
+  const [B, C] = await Promise.all([carregar('bacia.json'), carregar('chuva.json')]);
+  desenharEsquema(document.getElementById('esquema'), B.trechos);
+  document.getElementById('legenda-esquema').innerHTML = legendaEsquema(B.trechos.some(t => t.ramal_de));
+
+  // ---- cartões
+  const ac = C.acumulados || {};
+  const acum = B.trechos.filter(t => t.usina && t.usina.tipo === 'acumulacao').map(t => t.usina);
+  // destaque: o ponto que resume o que sai da bacia (config/<bacia>/bacia.yaml, chave "destaque")
+  const dq = BACIA.destaque || {};
+  const tdq = B.trechos.find(t => t.slug === dq.trecho) || { estacoes: [] };
+  const hc = tdq.estacoes.find(e => e.codigo === dq.estacao) || {};
+  const udq = (B.trechos.find(t => t.usina && t.usina.slug === dq.usina) || {}).usina || { atual: {}, ref: {}, faixa: {} };
+  const qmin = (udq.faixa || {}).q_min;
+  const pct = (v, ref) => (v && ref) ? `${fmt(v / ref * 100, 0)}% da média de 30 d` : '';
+  document.getElementById('cartoes').innerHTML = [
+    { r: 'Chuva média na bacia', v: `${fmt(ac.d7, 1)} <small>mm em 7 d</small>`, n: `${fmt(ac.mes_atual, 1)} mm no mês (${ac.dias_mes || 0} dias) contra MLT de ${fmt(ac.mlt_mes, 1)} mm no mês inteiro · MERGE até ${fmtData(ac.ultimo_dia)}`, h: 'chuva.html' },
+    { r: 'Volume útil dos reservatórios de acumulação', v: `<div style="display:flex;gap:18px">${acum.map(u => `<a href="trecho.html?t=${u.slug}" style="color:inherit"><div style="font-size:12px;color:var(--texto-suave)">${u.curto}</div>${fmt((u.atual || {}).pct_volume_util, 0)}%</a>`).join('')}</div>`, n: `ONS ${fmtInst(((acum[0] || {}).atual || {}).instante)} · clique no nome para abrir o trecho`, h: null },
+    dq.estacao
+      ? { r: dq.rotulo || 'Saída da bacia', v: `${fmt(hc.vazao)} <small>m³/s</small>`, n: `${hc.curto || ''} ${fmtInst(hc.ultimo_instante)} · ${pct(hc.vazao, (hc.ref || {}).vazao_media_30d)}${udq.curto ? ` · ${udq.curto} defluindo ${fmt((udq.atual || {}).defluencia)} m³/s${qmin ? ' contra mínimo declarado de ' + fmt(qmin) : ''}` : ''}`, h: `trecho.html?t=${dq.trecho}` }
+      // sem estação de destaque: a defluência da última usina é o que sai da bacia
+      : { r: dq.rotulo || 'Saída da bacia', v: `${fmt((udq.atual || {}).defluencia)} <small>m³/s</small>`, n: `defluência de ${udq.curto || ''} · ONS ${fmtInst((udq.atual || {}).instante)} · ${pct((udq.atual || {}).defluencia, (udq.ref || {}).defluencia_media_30d)}${qmin ? ' · mínimo declarado de ' + fmt(qmin) + ' m³/s' : ''}`, h: `trecho.html?t=${dq.trecho}` },
+  ].map(c => c.h ? `<a class="cartao" href="${c.h}" style="display:block;color:inherit"><div class="rotulo">${c.r}</div><div class="valor">${c.v}</div><div class="nota">${c.n}</div></a>`
+                 : `<div class="cartao"><div class="rotulo">${c.r}</div><div class="valor">${c.v}</div><div class="nota">${c.n}</div></div>`).join('');
+
+  // ---- avisos
+  const av = B.trechos.flatMap(t => t.avisos.map(a => ({ ...a, trecho_nome: t.nome })));
+  const A = await carregar('avisos.json');
+  const gerais = (A.avisos || []).filter(a => !a.trecho);
+  const todos = av.concat(gerais);
+  document.getElementById('avisos').innerHTML = todos.length ? todos.map(a => `<div class="aviso-item ${a.nivel}">${a.texto}<div class="meta">${a.trecho ? `<a href="trecho.html?t=${a.trecho}">${a.trecho_nome}</a> · ` : ''}${a.curto ? a.curto + ' · ' : ''}${fmtInst(a.quando)} · ${a.regra}${a.fonte ? ' · ' + a.fonte : ''}</div></div>`).join('')
+    : '<div class="aviso-item info">Nada detectado nas últimas 24 h.</div>';
+
+  // ---- mapa
+  const mapa = L.map('mapa', { scrollWheelZoom: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 15 }).addTo(mapa);
+  try { const b = await carregar('bacia.geojson'); const cam = L.geoJSON(b, { style: { color: PAL.escuro, weight: 1.5, fillOpacity: .06 } }).addTo(mapa); mapa.fitBounds(cam.getBounds()); }
+  catch (e) { mapa.setView(BACIA.centro, BACIA.zoom); }
+  await desenharHidrografia(mapa);
+  B.trechos.forEach(t => {
+    t.estacoes.filter(e => e.lat && e.lon).forEach(e => {
+      const cor = { ok: '#2E8B57', aviso: '#D9A400', off: '#9CA3AF' }[frescorClasse(e.frescor_h)];
+      L.circleMarker([e.lat, e.lon], { radius: 6, color: '#fff', weight: 1, fillColor: cor, fillOpacity: .95 }).addTo(mapa)
+        .bindTooltip(`<b>${e.curto}</b> · ${PAPEL[e.papel] || e.papel}<br>${e.vazao !== null && e.vazao !== undefined ? fmt(e.vazao) + ' m³/s · ' : ''}${e.cota_m !== null && e.cota_m !== undefined ? 'cota ' + fmt(e.cota_m, 2) + ' m · ' : ''}${frescorTexto(e.frescor_h)}`, { direction: 'top', offset: [0, -6] })
+        .bindPopup(`<b>${e.curto}</b> · ${PAPEL[e.papel] || e.papel}<br>${e.codigo} ${e.nome}<br>${e.vazao !== null && e.vazao !== undefined ? 'Vazão ' + fmt(e.vazao) + ' m³/s · ' : ''}${frescorTexto(e.frescor_h)}<br><a href="trecho.html?t=${t.slug}">trecho ${t.nome}</a> · <a href="estacao.html?c=${e.codigo}">estação</a>`);
+    });
+    if (t.usina) {
+      const u = t.usina;
+      marcadorUsina([u.lat, u.lon], u.curto, true, u.tipo).addTo(mapa).bindPopup(`<b>${u.nome}</b><br>Defluência ${fmt((u.atual || {}).defluencia)} m³/s · nível ${fmt((u.atual || {}).nivel_montante, 2)} m<br><a href="trecho.html?t=${t.slug}">abrir trecho</a>`);
+    }
+  });
+  const leg = L.control({ position: 'bottomleft' });
+  leg.onAdd = () => { const d = L.DomUtil.create('div', 'legenda-mapa'); d.innerHTML = '<b>estação fluviométrica: último dado</b><br><i style="background:#2E8B57;border-radius:50%"></i>há até 2 h<br><i style="background:#D9A400;border-radius:50%"></i>há até 24 h<br><i style="background:#9CA3AF;border-radius:50%"></i>sem dado recente'; return d; };
+  leg.addTo(mapa);
+  const simbolos = L.control({ position: 'topright' });
+  simbolos.onAdd = () => { const d = L.DomUtil.create('div', 'legenda-mapa'); d.innerHTML = '<i style="background:#0193DE;border-radius:50%"></i>estação fluviométrica (ANA)<br>' + LEGENDA_USINAS + '<br>' + LEGENDA_HIDRO + '<br><span style="color:#6B7280">passe o mouse para nome e leitura</span>'; return d; };
+  simbolos.addTo(mapa);
+})().catch(e => { document.querySelector('main').insertAdjacentHTML('afterbegin', `<div class="alerta-fixo">Falha ao carregar os dados: ${e.message}</div>`); console.error(e); });
+</script>
+</body>
+</html>

@@ -111,6 +111,31 @@ def usina_atual(u, ho, di, agora):
     return atual, tend, ref
 
 
+def br(v, nd=2):
+    return f"{v:,.{nd}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def faixa_semana(u, regra, ho, di, agora):
+    """Faixa de operação da semana operativa corrente (sábado a sexta) pelo nível da sexta-feira anterior, e a média
+    da defluência horária da semana até agora contra a máxima da faixa (Resolução ANA nº 132/2022, arts. 8º e 10).
+    A resolução não diz a hora da consulta de sexta: usa-se o nível diário do ONS da sexta (a confirmar com a ANA)."""
+    hoje = agora.date()
+    sab = hoje - timedelta(days=(hoje.weekday() - 5) % 7)          # sábado que abre a semana operativa
+    sexta = sab - timedelta(days=1)
+    d = di[(di["nom_reservatorio"] == u["ons"]) & (di["din_instante"].dt.date == sexta)]
+    nivel = float(d["val_nivelmontante"].iloc[-1]) if len(d) and pd.notna(d["val_nivelmontante"].iloc[-1]) else None
+    fx = sorted(regra["faixas"], key=lambda f: -f["nivel_de"])
+    atual = next((f for f in fx if nivel is not None and nivel >= f["nivel_de"]), fx[-1] if nivel is not None else None)
+    g = ho[(ho["nom_reservatorio"] == u["ons"]) & (ho["din_instante"] > pd.Timestamp(sab))]
+    media = float(g["val_vazaodefluente"].mean()) if len(g) and g["val_vazaodefluente"].notna().any() else None
+    q = atual.get("qmax_semanal") if atual else None
+    tol = regra.get("tolerancia_pct", 0)
+    return {"semana_ini": sab.isoformat(), "sexta": sexta.isoformat(), "nivel_sexta": num(nivel, 2) if nivel is not None else None,
+            "faixa": atual["nome"] if atual else None, "qmax_semanal": q, "limite_com_tolerancia": num(q * (1 + tol / 100)) if q else None,
+            "media_semana": num(media), "horas_semana": int(g["val_vazaodefluente"].notna().sum()) if len(g) else 0,
+            "fonte": regra["fonte"]}
+
+
 def usina_detalhe(u, ho, di, tele, cat, regras_por_usina, montante):
     g = ho[ho["nom_reservatorio"] == u["ons"]].sort_values("din_instante")
     d = di[di["nom_reservatorio"] == u["ons"]].sort_values("din_instante")
@@ -248,6 +273,15 @@ def monta_avisos(ho, di, est_json, agora, chuva, st, trecho_da_usina, trecho_da_
     col_de = {v: k for k, v in VARS_HO.items()}
     for r in regras():
         u = us[r["usina"]]
+        if r["tipo"] == "faixas":
+            fs = faixa_semana(u, r, ho, di, agora)
+            base = {"usina": u["slug"], "trecho": trecho_da_usina.get(u["slug"]), "curto": u["curto"], "regra": r["titulo"], "fonte": r["fonte"], "id": r["id"],
+                    "quando": agora.strftime("%Y-%m-%dT%H:%M")}
+            if fs["faixa"] and fs["faixa"] != "Normal":
+                av.append({**base, "nivel": "info", "texto": f"Semana operativa em faixa de {fs['faixa']}: nível de {br(fs['nivel_sexta'])} m na sexta {fs['sexta'][8:10]}/{fs['sexta'][5:7]}; defluência máxima média semanal de {br(fs['qmax_semanal'], 0)} m³/s."})
+            if fs["limite_com_tolerancia"] and fs["media_semana"] is not None and fs["media_semana"] > fs["limite_com_tolerancia"]:
+                av.append({**base, "nivel": "atencao", "texto": f"Média da defluência na semana até agora ({br(fs['media_semana'], 0)} m³/s em {fs['horas_semana']} h) acima da máxima da faixa de {fs['faixa']} com 5% de tolerância ({br(fs['limite_com_tolerancia'], 0)} m³/s). A semana ainda não fechou: é indício, não apuração."})
+            continue
         g = janela[janela["nom_reservatorio"] == u["ons"]].sort_values("din_instante") if len(janela) else janela
         col = col_de.get(r["variavel"])
         if not len(g) or not col or col not in g:
@@ -336,8 +370,14 @@ def main() -> int:
     tr = trechos()
     regras_por_usina = {}
     for r in regras():
-        regras_por_usina.setdefault(r["usina"], []).append(
-            {k: r.get(k) for k in ("id", "variavel", "tipo", "valor", "unidade", "titulo", "fonte", "vigencia", "nota", "piso_natural")})
+        item = {k: r.get(k) for k in ("id", "variavel", "tipo", "valor", "unidade", "titulo", "fonte", "vigencia", "nota", "piso_natural")}
+        if r["tipo"] == "faixas":
+            item["faixas"] = r["faixas"]
+            item["tolerancia_pct"] = r.get("tolerancia_pct", 0)
+            item["nota"] = "; ".join(f"{f['nome']} a partir de {br(f['nivel_de'])} m ({f['vu_pct']}% do VU): "
+                                     + (f"máxima média semanal de {br(f['qmax_semanal'], 0)} m³/s" if f.get("qmax_semanal") else "sem máxima")
+                                     for f in r["faixas"])
+        regras_por_usina.setdefault(r["usina"], []).append(item)
     st = {f: ler_status(f) for f in ("ons", "telemetria", "merge")}
     carimbo = agora.strftime("%Y-%m-%dT%H:%M")
 
@@ -383,6 +423,7 @@ def main() -> int:
     for i, t in enumerate(tr):
         u = us_por_slug.get(t.get("usina") or "")
         bloco = {"slug": t["slug"], "nome": t["nome"], "curto": t.get("curto", t["nome"]), "contexto": t["contexto"], "ordem": i, "usina": None,
+                 "ramal_de": t.get("ramal_de"), "margem": t.get("margem"), "rio": t.get("rio"),
                  "estacoes": [], "pluviometros": [], "avisos": [a for a in avisos if a.get("trecho") == t["slug"]],
                  "vizinhos": {"montante": tr[i - 1]["slug"] if i else None, "jusante": tr[i + 1]["slug"] if i + 1 < len(tr) else None}}
         if u:
@@ -394,6 +435,9 @@ def main() -> int:
                      "q_min": next((q["valor"] for q in rg if q["variavel"] == "defluencia" and q["tipo"] == "minimo"), None)}
             bloco["usina"] = {**{k: u.get(k) for k in ("slug", "ons", "nome", "curto", "tipo", "agente", "lat", "lon", "estacao_barramento")},
                               "atual": atual, "tendencia": tend, "ref": ref, "faixa": faixa, "n_regras": len(rg)}
+            rfx = next((q for q in rg if q["tipo"] == "faixas"), None)
+            if rfx:
+                bloco["usina"]["faixa_semana"] = faixa_semana(u, rfx, ho, di, agora)
         for e in t["estacoes"]:
             base = est_por_cod.get(e["codigo"], {"codigo": e["codigo"], "nome": e["codigo"]})
             bloco["estacoes"].append({k: base.get(k) for k in ("codigo", "nome", "curto", "papel", "rio_afluente", "esquema", "margem", "area_km2", "lat", "lon", "responsavel",
@@ -404,11 +448,14 @@ def main() -> int:
                 bloco["pluviometros"].append({k: base.get(k) for k in ("codigo", "nome", "lat", "lon", "responsavel", "ultimo_instante", "frescor_h", "chuva_24h", "chuva_7d", "ref")})
         bacia.append(bloco)
         # detalhe do trecho
-        det = {"slug": t["slug"], "nome": t["nome"], "curto": t.get("curto", t["nome"]), "contexto": t["contexto"], "vizinhos": bloco["vizinhos"], "usina": None,
+        det = {"slug": t["slug"], "nome": t["nome"], "curto": t.get("curto", t["nome"]), "contexto": t["contexto"], "nota_rio": t.get("nota_rio"), "vizinhos": bloco["vizinhos"], "usina": None,
                "estacoes": [], "pluviometros": []}
         if u:
+            # usina de montante: a anterior na lista, ou a indicada em usinas.yaml ("montante: <slug>" ou nulo),
+            # necessário quando há usina em afluente (Mauá, no Tibagi, não é montante de Capivara no rio principal)
             idx = next(k for k, x in enumerate(us) if x["slug"] == u["slug"])
-            det["usina"] = usina_detalhe(u, ho, di, tele, cat, regras_por_usina, us[idx - 1] if idx else None)
+            mont = us_por_slug.get(u["montante"]) if "montante" in u and u["montante"] else (None if "montante" in u else (us[idx - 1] if idx else None))
+            det["usina"] = usina_detalhe(u, ho, di, tele, cat, regras_por_usina, mont)
             det["usina"]["atual"], det["usina"]["tendencia"], det["usina"]["ref"] = bloco["usina"]["atual"], bloco["usina"]["tendencia"], bloco["usina"]["ref"]
         for e in bloco["estacoes"]:
             det["estacoes"].append({**{k: e.get(k) for k in ("codigo", "nome", "curto", "papel", "rio_afluente", "area_km2", "lat", "lon", "responsavel", "frescor_h", "ultimo_instante", "vazao", "cota_m", "ref")},
@@ -456,13 +503,15 @@ def main() -> int:
     })
 
     geo = SAIDA / "bacia.geojson"
-    if not geo.exists() or geo.stat().st_mtime < (CONFIG / "bacia_iguacu.geojson").stat().st_mtime:
-        n = simplificar(CONFIG / "bacia_iguacu.geojson", geo)
+    if not geo.exists() or geo.stat().st_mtime < (CONFIG / "bacia.geojson").stat().st_mtime:
+        n = simplificar(CONFIG / "bacia.geojson", geo)
         log(f"bacia.geojson: {n} vértices, {geo.stat().st_size // 1024} KB")
     hid = CONFIG / "hidrografia.geojson"
     if hid.exists():
         (SAIDA / "hidrografia.geojson").write_bytes(hid.read_bytes())
     log(f"site montado: {len(bacia)} trechos, {len(est_json)} estações, {len(avisos)} avisos")
+    from publica_paginas import publicar
+    publicar()
     return 0
 
 

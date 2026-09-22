@@ -1,4 +1,5 @@
-/* Funções compartilhadas do Painel Iguaçu (sem framework, sem build). */
+/* Funções compartilhadas dos painéis de bacia (sem framework, sem build). window.BACIA vem de cada página. */
+const BACIA = window.BACIA || { nome: '', rio: 'rio', centro: [-15, -50], zoom: 4 };
 const PAL = { escuro: '#294086', medio: '#0193DE', claro: '#80B5E1', marinho: '#000080', limite: '#C0504D',
               fsarh: '#E08A1E', cinza: '#6B7280', chuva: '#80B5E1', grade: '#E5E7EB' };
 // usinas: só a defluência é exibida (a afluência horária do ONS é resíduo de balanço)
@@ -28,7 +29,7 @@ function marcadorUsina(latlng, nome, rotuloFixo = false, tipo = 'acumulacao') {
   return m;
 }
 
-/* hidrografia (rio Iguaçu e afluentes monitorados, SNIRH) nos mapas; devolve a camada ou null */
+/* hidrografia (rio principal e afluentes monitorados, SNIRH) nos mapas; devolve a camada ou null */
 async function desenharHidrografia(mapa, escala = 1, interativa = true) {
   try {
     const gj = await carregar('hidrografia.geojson');
@@ -40,10 +41,10 @@ async function desenharHidrografia(mapa, escala = 1, interativa = true) {
     return cam;
   } catch (e) { console.warn('hidrografia', e); return null; }
 }
-const LEGENDA_HIDRO = '<i style="background:#0B6BA8;height:3px;border-radius:0"></i>rio Iguaçu<br><i style="background:#3FB0E8;height:2px;border-radius:0"></i>afluente monitorado';
+const LEGENDA_HIDRO = '<i style="background:#0B6BA8;height:3px;border-radius:0"></i>' + BACIA.rio + '<br><i style="background:#3FB0E8;height:2px;border-radius:0"></i>afluente monitorado';
 
 /* legenda do esquema longitudinal (início e trecho) */
-function legendaEsquema() {
+function legendaEsquema(temRamal = false) {
   const tri = '<svg width="15" height="13" viewBox="0 0 18 16"><path d="M9 1 L17 15 L1 15 Z" fill="#294086"/></svg>';
   const cir = '<svg width="13" height="13" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#294086"/></svg>';
   const pto = c => `<svg width="11" height="11" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="${c}"/></svg>`;
@@ -55,6 +56,7 @@ function legendaEsquema() {
       ${item(cir, "UHE a fio d'água · número acima: defluência (m³/s)")}
       ${item(pto('#0193DE'), 'estação fluviométrica · número: vazão (m³/s)')}
       ${item(afl, 'afluente · margem direita acima do rio, margem esquerda abaixo')}
+      ${temRamal ? item('<svg width="22" height="14" viewBox="0 0 22 14"><path d="M21 12 H8 Q3 12 3 7 V1" stroke="#80B5E1" stroke-width="3" fill="none"/></svg>', 'afluente com usina · braço paralelo ao rio, que sobe até a confluência; clique para abrir o trecho do afluente') : ''}
     </div>
     <div class="grupo"><div class="tit">Idade do dado</div>
       <div class="li" style="color:var(--texto-suave)">cor das estações e do contorno das usinas</div>
@@ -69,9 +71,13 @@ function legendaEsquema() {
 }
 
 /* esquema longitudinal do rio: usinas e réguas em ordem, com o valor da última hora */
-function desenharEsquema(el, trechos, destaque = null) {
+function desenharEsquema(el, todos, destaque = null) {
+  // trecho em afluente (ramal_de: usina num tributário, como Mauá no Tibagi) não entra na linha do rio principal:
+  // aparece como ramal na faixa do trecho onde o afluente chega
+  const trechos = todos.filter(t => !t.ramal_de);
+  const ramais = todos.filter(t => t.ramal_de);
   const unico = trechos.length === 1;
-  const temSul = trechos.some(t => t.estacoes.some(e => e.papel === 'afluente' && e.margem === 'esquerda' && e.esquema !== false));
+  const temSul = trechos.some(t => t.estacoes.some(e => e.papel === 'afluente' && e.margem === 'esquerda' && e.esquema !== false)) || ramais.some(r => r.margem === 'esquerda');
   // margem direita maior: os nomes das estações descem inclinados para a direita e a primeira coluna (cabeceira) fica na borda
   const COL = 56, MARG = unico ? 64 : 28, MARG_D = unico ? 64 : 128, Y = 180, H = temSul ? 402 : 298;
   const cols = []; // {tipo, x, ...}
@@ -80,6 +86,20 @@ function desenharEsquema(el, trechos, destaque = null) {
     const principais = t.estacoes.filter(e => e.esquema !== false && e.papel !== 'barramento');
     const barr = t.estacoes.find(e => e.papel === 'barramento');
     let usinaInserida = false;
+    // afluente com usina (como o ONS desenha o rio Pardo no Grande): braço paralelo ao rio principal, com as estações
+    // e a usina do afluente em ordem de rio, no lado de montante da faixa do trecho onde ele deságua
+    ramais.filter(r => r.ramal_de === t.slug).forEach(r => {
+      r._ini = cols.length;
+      const ests = r.estacoes.filter(e => e.esquema !== false && e.papel !== 'barramento');
+      const rb = r.estacoes.find(e => e.papel === 'barramento');
+      let ui = false;
+      ests.forEach(e => {
+        if (e.papel === 'jusante' && r.usina && !ui) { cols.push({ tipo: 'ramal_usina', t: r, u: r.usina, barr: rb }); ui = true; }
+        cols.push({ tipo: 'ramal_est', t: r, e });
+      });
+      if (r.usina && !ui) cols.push({ tipo: 'ramal_usina', t: r, u: r.usina, barr: rb });
+      r._fim = cols.length;
+    });
     principais.forEach(e => {
       if (e.papel === 'jusante' && t.usina && !usinaInserida) { cols.push({ tipo: 'usina', t, u: t.usina, barr }); usinaInserida = true; }
       cols.push({ tipo: e.papel === 'afluente' ? 'afluente' : 'regua', t, e });
@@ -118,6 +138,16 @@ function desenharEsquema(el, trechos, destaque = null) {
     const xs = (esq + dir) / 2;
     s += `<path d="M${xs + 3.5} ${Y - 5} L${xs - 3.5} ${Y} L${xs + 3.5} ${Y + 5}" fill="none" stroke="#294086" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`;
   });
+  const YB = r => r.margem === 'esquerda' ? Y + 112 : Y - 112; // altura do braço do afluente
+  ramais.filter(r => r._fim > r._ini).forEach(r => {
+    const yb = YB(r), xr = x(r._ini) + COL * 0.55, xl = x(r._fim - 1) - COL * 0.5, R = 14, sobe = yb > Y ? -1 : 1;
+    const sel = r.slug === destaque;
+    if (sel) s += `<rect x="${xl - 10}" y="${Math.min(yb, Y) + (yb > Y ? 14 : -60)}" width="${xr - xl + 20}" height="${Math.abs(yb - Y) + 46}" rx="6" fill="#E3EEFB" stroke="#294086" stroke-width="2"/>`;
+    s += `<a href="trecho.html?t=${r.slug}"><path d="M${xr} ${yb} H${xl + R} Q${xl} ${yb} ${xl} ${yb + sobe * R} V${Y}" stroke="#80B5E1" stroke-width="5" stroke-linecap="round" fill="none"/>`;
+    s += `<text x="${xr + 6}" y="${yb + 4}" font-size="11" font-style="italic" fill="#294086">${esc(r.rio || r.nome)}</text><title>${esc(r.nome)}: clique para abrir o trecho</title></a>`;
+    // setas do sentido do afluente, entre as formas do braço
+    for (let i = r._ini; i < r._fim - 1; i++) { const xs = (x(i) + x(i + 1)) / 2; s += `<path d="M${xs + 3} ${yb - 4} L${xs - 3} ${yb} L${xs + 3} ${yb + 4}" fill="none" stroke="#294086" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`; }
+  });
   s += unico
     ? `<text x="${W - 4}" y="${Y + 4}" font-size="10" fill="#6B7280" text-anchor="end">montante</text><text x="${4}" y="${Y + 4}" font-size="10" fill="#6B7280">← jusante</text>`
     : `<text x="${W - MARG_D}" y="${Y + 22}" font-size="10" fill="#6B7280" text-anchor="end">cabeceira (montante)</text><text x="${MARG}" y="${Y + 22}" font-size="10" fill="#6B7280">← sentido do rio · foz (jusante)</text>`;
@@ -125,6 +155,24 @@ function desenharEsquema(el, trechos, destaque = null) {
     const cx = x(i);
     if (c.tipo === 'vazio') {
       return;
+    } else if (c.tipo === 'ramal_est') {
+      const e = c.e, yb = YB(c.t);
+      s += `<a href="estacao.html?c=${e.codigo}"><circle cx="${cx}" cy="${yb}" r="6.5" fill="${cor(e.frescor_h)}" stroke="#fff" stroke-width="2"/>`;
+      s += `<text x="${cx}" y="${yb - 12}" font-size="11.5" text-anchor="middle" fill="#1F2937">${fmt(e.vazao)}</text>`;
+      s += `<text transform="translate(${cx + 3} ${yb + 16}) rotate(45)" font-size="10" fill="#374151">${esc(e.curto)}</text>`;
+      s += `<title>${esc(e.curto)} (${e.codigo}) · ${PAPEL[e.papel]} no ${esc(c.t.rio || c.t.nome)}
+${fmt(e.vazao)} m³/s · ${frescorTexto(e.frescor_h)}</title></a>`;
+    } else if (c.tipo === 'ramal_usina') {
+      const u = c.u, a = u.atual || {}, yb = YB(c.t), acum = u.tipo === 'acumulacao';
+      s += `<a href="trecho.html?t=${c.t.slug}">`;
+      s += acum ? `<path d="M${cx + 14} ${yb} L${cx - 12} ${yb - 15} L${cx - 12} ${yb + 15} Z" fill="#294086" stroke="${cor(a.frescor_h)}" stroke-width="2.2" stroke-linejoin="round"/>`
+                : `<circle cx="${cx}" cy="${yb}" r="11" fill="#294086" stroke="${cor(a.frescor_h)}" stroke-width="2.2"/>`;
+      s += `<text x="${cx}" y="${yb - 21}" font-size="12" text-anchor="middle" fill="#294086">${fmt(a.defluencia)}</text>`;
+      if (acum) s += `<text x="${cx}" y="${yb + 28}" font-size="10" text-anchor="middle" fill="#294086">VU ${fmt(a.pct_volume_util, 0)}%</text>`;
+      s += `<text transform="translate(${cx + 3} ${yb + (acum ? 42 : 30)}) rotate(45)" font-size="10.5" fill="#294086">${esc(u.curto)}</text>`;
+      s += `<title>${esc(u.nome)} · no ${esc(c.t.rio || c.t.nome)}, ${acum ? 'reservatório de acumulação' : "fio d'água"} (ONS ${fmtInst(a.instante)})
+defluência ${fmt(a.defluencia)} m³/s${acum ? ' · volume útil ' + fmt(a.pct_volume_util, 1) + '%' : ''}
+clique para abrir o trecho</title></a>`;
     } else if (c.tipo === 'afluente') {
       // margem direita (norte) acima do rio, margem esquerda (sul) abaixo, como no mapa com o norte para cima;
       // afluentes vizinhos do mesmo lado alternam altura para os nomes não se cruzarem
@@ -194,7 +242,7 @@ function montarTopo(ativo, status) {
       <span><span class="ponto ${m.ok ? 'ok' : 'off'}"></span>MERGE até <b>${fmtData(m.ultimo_dia)}</b></span></div>`;
   }
   const el = document.getElementById('topo');
-  el.innerHTML = `<div class="interno"><a class="marca" href="index.html">${logo}<div>Painel Iguaçu<small>acompanhamento hidrológico da bacia</small></div></a><nav class="menu">${nav}</nav>${carimbo}</div>`;
+  el.innerHTML = `<div class="interno"><a class="marca" href="index.html">${logo}<div>Painel ${BACIA.nome}<small>acompanhamento hidrológico da bacia</small></div></a><nav class="menu"><a href="../index.html" class="outras">Bacias</a>${nav}</nav>${carimbo}</div>`;
   // a barra é fixa: o índice das seções gruda logo abaixo dela e as âncoras descontam a mesma altura
   // altura fracionária (116,33 px, por exemplo) deixaria uma fresta entre as duas barras: 1 px de sobreposição
   const medir = () => document.documentElement.style.setProperty('--h-topo',
@@ -208,7 +256,7 @@ function montarRodape(status) {
   document.getElementById('rodape').innerHTML = `<div class="interno">
     <p><b>Painel técnico não oficial.</b> Não é produto da Agência Nacional de Águas e Saneamento Básico nem do ONS. Os dados são brutos, sem consistência, e podem ser revisados pelas fontes. O painel exibe dado e regra; não conclui descumprimento.</p>
     <p>Fontes: ${c.ons_ho || 'ONS, Dados Abertos (base horária)'}; ${c.ons_di || 'ONS, Dados Abertos (base diária)'}; ${c.telemetria || 'ANA, webservice de telemetria'}; ${c.merge || 'INPE/CPTEC, MERGE'}; ${c.mlt || ''}.</p>
-    <p>Limites de outorga e de FSAR-H lidos nos documentos primários (outorgas ANA nº 2.382/2022 e nº 2.590/2019; formulários FSAR-H lidos em 12/09/2026). Código e dados: <a href="https://github.com/dlpena/iguacu-painel">github.com/dlpena/iguacu-painel</a>.</p>
+    <p>${BACIA.rodape_regras || ''} Código e dados: <a href="https://github.com/dlpena/paineis-bacias">github.com/dlpena/paineis-bacias</a>.</p>
     <p><a href="fontes.html">Fontes, método e avisos</a></p></div>`;
 }
 async function iniciar(ativo) {
@@ -258,10 +306,14 @@ const CONFIG_PLOT = { responsive: true, displaylogo: false, locale: 'pt-BR', mod
                       toImageButtonOptions: { format: 'png', scale: 2 } };
 // lado: 'direita' (outorga) ou 'esquerda' (declarado ao ONS), para os rótulos de linhas próximas não se sobreporem
 function linhaLimite(y, texto, cor = PAL.limite, tracado = 'dash', lado = 'direita') {
-  const esq = lado === 'esquerda';
+  // lado: 'esquerda', 'centro', 'direita' ou uma fração da largura (0 a 1), para afastar rótulos de linhas próximas
+  const num = typeof lado === 'number';
+  const x = num ? lado : ({ esquerda: 0, centro: 0.5, direita: 1 }[lado] ?? 1), anc = num ? 'center' : ({ esquerda: 'left', centro: 'center', direita: 'right' }[lado] || 'right');
   return { shape: { type: 'line', xref: 'paper', x0: 0, x1: 1, y0: y, y1: y, line: { color: cor, width: 1.5, dash: tracado } },
-           ann: { xref: 'paper', x: esq ? 0 : 1, y: y, text: texto, showarrow: false, xanchor: esq ? 'left' : 'right', yanchor: 'bottom', font: { size: 10, color: cor }, bgcolor: 'rgba(255,255,255,.7)' } };
+           ann: { xref: 'paper', x, y: y, text: texto, showarrow: false, xanchor: anc, yanchor: 'bottom', font: { size: 10, color: cor }, bgcolor: 'rgba(255,255,255,.7)' } };
 }
+// cor das regras de resolução da ANA (faixas de operação), distinta da outorga (vermelho) e do FSAR-H (laranja)
+const COR_RESOLUCAO = '#7B3FA0';
 function traco(x, y, nome, cor, extra = {}) { return Object.assign({ x, y, name: nome, type: 'scatter', mode: 'lines', line: { color: cor, width: 1.6 }, connectgaps: false }, extra); }
 function recorte(x, arrays, dias) {
   if (!dias || !x.length) return { x, arrays };

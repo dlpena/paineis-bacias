@@ -1,0 +1,7 @@
+# Bacias com painel publicado, na ordem da página inicial. Cada uma tem config/<slug>/ e docs/<slug>/.
+# sin_svg: nome da bacia no mapa do SIN (config/mapa_sin.json), para acender e ligar o clique.
+bacias:
+  - slug: iguacu
+    sin_svg: IGUACU
+  - slug: paranapanema
+    sin_svg: PARANAPANEMA

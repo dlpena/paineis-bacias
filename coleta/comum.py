@@ -10,11 +10,17 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
+import os
+
 RAIZ = Path(__file__).resolve().parents[1]
-CONFIG = RAIZ / "config"
-DADOS = RAIZ / "dados"
-DOCS = RAIZ / "docs"
+# Uma bacia por rodada: BACIA=<slug> no ambiente (config/<slug>/, dados/<slug>/, docs/<slug>/).
+# As bacias publicadas estão em config/bacias.yaml.
+BACIA = os.environ.get("BACIA", "iguacu")
+CONFIG = RAIZ / "config" / BACIA
+DADOS = RAIZ / "dados" / BACIA
+DOCS = RAIZ / "docs" / BACIA
 STATUS = DADOS / "status"
+CACHE = RAIZ / ".cache"  # downloads compartilhados entre bacias na mesma rodada (fora do git)
 
 # O runner do GitHub Actions roda em UTC; "hoje" e "mês corrente" têm de ser no horário de Brasília,
 # senão à meia-noite UTC (21h BRT) o mês vira antes de o ONS publicar o parquet novo.
@@ -30,6 +36,15 @@ def agora_brt() -> datetime:
 
 def hoje_brt():
     return agora_brt().date()
+
+
+def bacia() -> dict:
+    """Identidade e parâmetros da bacia (config/<slug>/bacia.yaml)."""
+    return yaml.safe_load((CONFIG / "bacia.yaml").read_text(encoding="utf-8"))
+
+
+def bacias() -> list[dict]:
+    return yaml.safe_load((RAIZ / "config" / "bacias.yaml").read_text(encoding="utf-8"))["bacias"]
 
 
 def usinas() -> list[dict]:

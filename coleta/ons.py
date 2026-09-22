@@ -23,7 +23,7 @@ import pandas as pd
 import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from comum import DADOS, gravar_status, hoje_brt, log, usinas  # noqa: E402
+from comum import CACHE, DADOS, bacia, gravar_status, hoje_brt, log, usinas  # noqa: E402
 
 S3 = "https://ons-aws-prod-opendata.s3.amazonaws.com/dataset/"
 HOUR = S3 + "dados_hidrologicos_ho/DADOS_HIDROLOGICOS_HO_{y}_{m:02d}.parquet"
@@ -40,6 +40,10 @@ COLS = ["nom_reservatorio", "din_instante", "val_nivelmontante", "val_niveljusan
 
 def baixa(url: str, tentativas: int = 3) -> pd.DataFrame | None:
     """None em 404 (arquivo ainda não publicado); exceção nos demais erros após as tentativas."""
+    # o parquet é do SIN inteiro e serve a todas as bacias: guardado por 30 min para a rodada da bacia seguinte
+    cache = CACHE / url.rsplit("/", 1)[1]
+    if cache.exists() and time.time() - cache.stat().st_mtime < 1800:
+        return pd.read_parquet(cache)
     erro = None
     for i in range(tentativas):
         try:
@@ -47,6 +51,8 @@ def baixa(url: str, tentativas: int = 3) -> pd.DataFrame | None:
             if r.status_code == 404:
                 return None
             r.raise_for_status()
+            CACHE.mkdir(parents=True, exist_ok=True)
+            cache.write_bytes(r.content)
             return pd.read_parquet(io.BytesIO(r.content))
         except Exception as e:  # noqa: BLE001
             erro = e
@@ -59,7 +65,7 @@ def limpa(d: pd.DataFrame, horario: bool) -> pd.DataFrame:
     d = d.copy()
     d["nom_reservatorio"] = d["nom_reservatorio"].astype(str).str.strip()
     if "nom_bacia" in d.columns:
-        m = d["nom_bacia"].astype(str).str.strip().eq("IGUACU")
+        m = d["nom_bacia"].astype(str).str.strip().eq(bacia()["nom_bacia_ons"])
     else:
         m = pd.Series(False, index=d.index)
     d = d[m | d["nom_reservatorio"].isin(nomes)]

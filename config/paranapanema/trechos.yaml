@@ -1,0 +1,153 @@
+# Trechos do rio Paranapanema, de montante para jusante. Cada trecho reúne a usina e as estações fluviométricas que a
+# explicam (catálogo da Resolução Conjunta ANEEL/ANA nº 3, só estações telemétricas em operação). Áreas de drenagem
+# e rios: cadastro da Res. nº 3 (config/paranapanema/estacoes.csv).
+# papel: montante | afluente | barramento | jusante. chega/sai: o ponto do rio mais a montante e o mais a jusante.
+# margem (afluentes): direita = norte (lado paulista), esquerda = sul (lado paranaense), olhando para jusante; calculada
+# em 22/09/2026 pela posição da estação em relação ao traçado do rio Paranapanema no SNIRH.
+# ramal_de: trecho num afluente (Mauá, no rio Tibagi); no diagrama da bacia aparece como ramal que chega ao trecho indicado.
+trechos:
+  - slug: jurumirim
+    chega: "estacao:64080000"
+    sai: "usina:jurumirim"
+    curto: Jurumirim
+    nome: Cabeceira e Jurumirim
+    usina: jurumirim
+    nota_rio: "O ponto de chegada é Campina do Monte Alegre, a única estação telemétrica do rio principal a montante do reservatório: drena 5.860 km², um terço dos 17.900 km² do barramento de Jurumirim."
+    contexto: "Do alto Paranapanema até Jurumirim, o primeiro reservatório de acumulação da cascata. Recebe o Apiaí-Guaçu e o Taquari pela margem esquerda. A Resolução ANA nº 132/2022 fixa faixas de operação para Jurumirim."
+    estacoes:
+      - {codigo: "64080000", papel: montante, curto: "Campina do Monte Alegre"}
+      - {codigo: "64119000", papel: afluente, curto: "Buri (Apiaí-Guaçu)", rio: "rio Apiaí-Guaçu", margem: esquerda}
+      - {codigo: "64198000", papel: afluente, curto: "Fazenda Agrolin (Taquari)", rio: "rio Taquari", margem: esquerda}
+      - {codigo: "64215080", papel: barramento, curto: "Barramento Jurumirim"}
+    pluviometros: ["2349041", "2347192", "2348086", "2348034", "2349074"]
+  - slug: piraju
+    chega: "usina:jurumirim"
+    sai: "usina:piraju"
+    curto: Piraju
+    nome: Piraju
+    usina: piraju
+    contexto: "Fio d'água logo a jusante de Jurumirim, na cidade de Piraju."
+    estacoes:
+      - {codigo: "64219080", papel: barramento, curto: "Barramento Piraju"}
+      - {codigo: "64219200", papel: jusante, curto: "Jusante Piraju"}
+    pluviometros: ["2349078"]
+  - slug: paranapanema
+    chega: "usina:piraju"
+    sai: "usina:paranapanema"
+    curto: Paranapanema
+    nome: UHE Paranapanema
+    usina: paranapanema
+    contexto: "Pequena usina a fio d'água a jusante de Piraju, a mais antiga da cascata (entrada em operação em 1957 no cadastro de reservatórios do ONS)."
+    estacoes:
+      - {codigo: "64221000", papel: barramento, curto: "Barramento Paranapanema"}
+      - {codigo: "64221500", papel: jusante, curto: "Jusante Paranapanema"}
+    pluviometros: ["2349082"]
+  - slug: chavantes
+    chega: "usina:paranapanema"
+    sai: "usina:chavantes"
+    curto: Chavantes
+    nome: Chavantes
+    usina: chavantes
+    contexto: "Segundo reservatório de acumulação, onde chega o rio Itararé pela margem esquerda. A Resolução ANA nº 132/2022 fixa faixas de operação para Chavantes."
+    estacoes:
+      - {codigo: "64247000", papel: afluente, curto: "Olaria dos Padres (Itararé)", rio: "rio Itararé", margem: esquerda}
+      - {codigo: "64250010", papel: afluente, curto: "Itaporanga (Verde)", rio: "rio Verde", margem: esquerda}
+      - {codigo: "64270080", papel: barramento, curto: "Barramento Chavantes"}
+    pluviometros: ["2349042", "2449067", "2349076", "2349068", "2349023"]
+  - slug: ourinhos
+    chega: "usina:chavantes"
+    sai: "usina:ourinhos"
+    curto: Ourinhos
+    nome: Ourinhos
+    usina: ourinhos
+    contexto: "Fio d'água imediatamente a jusante de Chavantes."
+    estacoes:
+      - {codigo: "64278080", papel: barramento, curto: "Barramento Ourinhos"}
+      - {codigo: "64278500", papel: jusante, curto: "Jusante Ourinhos"}
+    pluviometros: ["2349081"]
+  - slug: salto-grande
+    chega: "usina:ourinhos"
+    sai: "usina:salto-grande"
+    curto: Salto Grande
+    nome: Salto Grande
+    usina: salto-grande
+    contexto: "Fio d'água onde entram, pela margem direita, os rios Pardo, Turvo e Novo, do lado paulista."
+    estacoes:
+      - {codigo: "64320010", papel: afluente, curto: "Santa Cruz do Rio Pardo (Pardo)", rio: "rio Pardo", margem: direita}
+      - {codigo: "64328050", papel: afluente, curto: "Fazenda da Barra (Turvo)", rio: "rio Turvo", margem: direita}
+      - {codigo: "64334000", papel: afluente, curto: "Rio Novo", rio: "rio Novo", margem: direita}
+      - {codigo: "64332080", papel: barramento, curto: "Barramento Salto Grande"}
+    pluviometros: ["2250089", "2249109", "2249113", "2249110"]
+  - slug: canoas-ii
+    chega: "usina:salto-grande"
+    sai: "usina:canoas-ii"
+    curto: Canoas II
+    nome: Canoas II
+    usina: canoas-ii
+    contexto: "Fio d'água a jusante de Salto Grande."
+    estacoes:
+      - {codigo: "64345075", papel: barramento, curto: "Barramento Canoas II"}
+    pluviometros: ["2250091", "2448073", "2348092", "2350075", "2250099", "2250100"]
+  - slug: canoas-i
+    chega: "usina:canoas-ii"
+    sai: "usina:canoas-i"
+    curto: Canoas I
+    nome: Canoas I
+    usina: canoas-i
+    contexto: "Fio d'água a jusante de Canoas II, antes do reservatório de Capivara."
+    estacoes:
+      - {codigo: "64345080", papel: barramento, curto: "Barramento Canoas I"}
+    pluviometros: ["2448071", "2448072", "2348090", "2250090", "2250097", "2250098"]
+  - slug: maua
+    ramal_de: capivara
+    margem: esquerda
+    rio: rio Tibagi
+    chega: "estacao:64464995"
+    sai: "estacao:64507000"
+    curto: Mauá (Tibagi)
+    nome: Rio Tibagi e Mauá
+    usina: maua
+    nota_rio: "Trecho no rio Tibagi, afluente da margem esquerda que deságua no reservatório de Capivara. Chega: Tibagi a montante do reservatório de Mauá (8.920 km²); sai: Jataizinho (21.900 km²), perto da foz."
+    contexto: "Usina de acumulação no rio Tibagi, afluente paranaense que chega ao reservatório de Capivara."
+    estacoes:
+      - {codigo: "64464995", papel: montante, curto: "Tibagi montante"}
+      - {codigo: "64482000", papel: montante, curto: "Telêmaco Borba"}
+      - {codigo: "64489000", papel: barramento, curto: "Barramento Mauá"}
+      - {codigo: "64491000", papel: jusante, curto: "Rib. das Antas jusante"}
+      - {codigo: "64498560", papel: jusante, curto: "Barão de Antonina"}
+    pluviometros: ["2450075", "2450073", "2450003", "2450072", "2550016"]
+  - slug: capivara
+    chega: "usina:canoas-i"
+    sai: "usina:capivara"
+    curto: Capivara
+    nome: Capivara
+    usina: capivara
+    contexto: "Terceiro reservatório de acumulação e o maior da cascata (10.540 hm³ de volume máximo no cadastro de reservatórios do ONS), onde chegam pela margem esquerda o Cinzas, o Laranjinha e o Tibagi (com Mauá). A Resolução ANA nº 132/2022 fixa faixas de operação para Capivara."
+    estacoes:
+      - {codigo: "64370000", papel: afluente, curto: "Andirá (Cinzas)", rio: "rio das Cinzas", margem: esquerda}
+      - {codigo: "64390000", papel: afluente, curto: "Porto Santa Terezinha (Laranjinha)", rio: "rio Laranjinha", margem: esquerda}
+      - {codigo: "64507000", papel: afluente, curto: "Jataizinho (Tibagi)", rio: "rio Tibagi", margem: esquerda, esquema: false}  # no diagrama o Tibagi aparece como o ramal de Mauá
+      - {codigo: "64516080", papel: barramento, curto: "Barramento Capivara"}
+    pluviometros: ["2350002", "2251070", "2350000", "2350001", "2450061"]
+  - slug: taquarucu
+    chega: "usina:capivara"
+    sai: "usina:taquarucu"
+    curto: Taquaruçu
+    nome: Taquaruçu
+    usina: taquarucu
+    contexto: "Fio d'água a jusante de Capivara."
+    estacoes:
+      - {codigo: "64535080", papel: barramento, curto: "Barramento Taquaruçu"}
+    pluviometros: ["2251080", "2252049", "2251081"]
+  - slug: rosana
+    chega: "usina:taquarucu"
+    sai: "usina:rosana"
+    curto: Rosana
+    nome: Rosana e foz no Paraná
+    usina: rosana
+    contexto: "Última usina da cascata, perto da foz no rio Paraná. Recebem-se o Pirapó pela margem esquerda e o Pirapozinho pela direita."
+    estacoes:
+      - {codigo: "64560000", papel: afluente, curto: "Itaguajé (Pirapó)", rio: "rio Pirapó", margem: esquerda}
+      - {codigo: "64562000", papel: afluente, curto: "Pirapozinho", rio: "ribeirão Pirapozinho", margem: direita}
+      - {codigo: "64571080", papel: barramento, curto: "Barramento Rosana"}
+    pluviometros: ["2252051", "2252058", "2252050", "2252053"]

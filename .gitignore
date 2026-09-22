@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
-dados/merge/tmp.grib2
-dados/merge/clim/
+dados/*/merge/tmp.grib2
+dados/*/merge/clim/
 *.idx
 .DS_Store
+.cache/

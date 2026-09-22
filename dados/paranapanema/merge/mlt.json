@@ -1,0 +1,27 @@
+{
+ "mlt_mm": {
+  "jan": 191.1,
+  "feb": 143.6,
+  "mar": 110.1,
+  "apr": 72.1,
+  "may": 82.0,
+  "jun": 69.8,
+  "jul": 62.0,
+  "aug": 54.9,
+  "sep": 89.3,
+  "oct": 134.3,
+  "nov": 111.7,
+  "dec": 143.5
+ },
+ "n_celulas": 1068,
+ "metodo": "area-ponderada-1",
+ "conferencia_area": {
+  "metodo": "area-ponderada-1",
+  "celulas": 1068,
+  "area_pesos_km2": 107375.5,
+  "area_oficial_km2": 107375.5,
+  "dif_area_pct": -0.0
+ },
+ "periodo": "1998-2024",
+ "fonte": "INPE/CPTEC, climatologia mensal do MERGE (MERGE_CPTEC_acum_{mes}.nc), 1998-2024"
+}

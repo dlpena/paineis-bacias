@@ -1,0 +1,310 @@
+# Condicionantes VIGENTES da bacia do Paranapanema, para exibição no painel. O painel exibe a regra e o dado;
+# não conclui descumprimento.
+# Outorgas ANA: texto do art. 1º lido nos PDFs do DOU em 22/09/2026 (repositorio_usina, data/atos). Nenhuma das nove
+# revoga ato anterior nem foi revogada por ato posterior encontrado no repositório; nenhuma fixa vazão mínima defluente.
+# Piraju, Ourinhos e Mauá: sem outorga da ANA no repositório (a confirmar se são de domínio estadual ou só não coletadas).
+# Resolução ANA nº 132/2022 (condições de operação de Jurumirim, Chavantes e Capivara): texto integral lido em
+# 22/09/2026 (PDF assinado, doc. 02500.053625/2022-82; vigência desde 01/01/2023, art. 20).
+regras:
+  # ---------------- jurumirim (Outorga ANA nº 219/2021, de 09/02/2021)
+  - id: jur-na-max
+    usina: jurumirim
+    variavel: nivel_montante
+    tipo: maximo
+    valor: 568.0
+    unidade: m
+    titulo: Nível máximo normal a montante 568,00 m
+    fonte: "Outorga ANA nº 219/2021, art. 1º, IV"
+    vigencia: permanente
+  - id: jur-na-min
+    usina: jurumirim
+    variavel: nivel_montante
+    tipo: minimo
+    valor: 559.7
+    unidade: m
+    titulo: Nível mínimo normal a montante 559,70 m
+    fonte: "Outorga ANA nº 219/2021, art. 1º, VI"
+    vigencia: permanente
+  - id: jur-turb-max
+    usina: jurumirim
+    variavel: vazao_turbinada
+    tipo: maximo
+    valor: 374.0
+    unidade: m³/s
+    titulo: Vazão máxima turbinada 374 m³/s
+    fonte: "Outorga ANA nº 219/2021, art. 1º, IX"
+    vigencia: permanente
+  # ---------------- paranapanema (Outorga ANA nº 308/2021, de 02/03/2021)
+  - id: prn-na-max
+    usina: paranapanema
+    variavel: nivel_montante
+    tipo: maximo
+    valor: 505.71
+    unidade: m
+    titulo: Nível máximo normal a montante 505,71 m
+    fonte: "Outorga ANA nº 308/2021, art. 1º, IV"
+    vigencia: permanente
+  - id: prn-na-min
+    usina: paranapanema
+    variavel: nivel_montante
+    tipo: minimo
+    valor: 504.7
+    unidade: m
+    titulo: Nível mínimo normal a montante 504,70 m
+    fonte: "Outorga ANA nº 308/2021, art. 1º, VI"
+    vigencia: permanente
+  - id: prn-turb-max
+    usina: paranapanema
+    variavel: vazao_turbinada
+    tipo: maximo
+    valor: 229.0
+    unidade: m³/s
+    titulo: Vazão máxima turbinada 229 m³/s
+    fonte: "Outorga ANA nº 308/2021, art. 1º, IX"
+    vigencia: permanente
+  # ---------------- chavantes (Outorga ANA nº 188/2021, de 02/02/2021)
+  - id: chv-na-max
+    usina: chavantes
+    variavel: nivel_montante
+    tipo: maximo
+    valor: 474.0
+    unidade: m
+    titulo: Nível máximo normal a montante 474,00 m
+    fonte: "Outorga ANA nº 188/2021, art. 1º, IV"
+    vigencia: permanente
+  - id: chv-na-min
+    usina: chavantes
+    variavel: nivel_montante
+    tipo: minimo
+    valor: 465.23
+    unidade: m
+    titulo: Nível mínimo normal a montante 465,23 m
+    fonte: "Outorga ANA nº 188/2021, art. 1º, VI"
+    vigencia: permanente
+  - id: chv-turb-max
+    usina: chavantes
+    variavel: vazao_turbinada
+    tipo: maximo
+    valor: 688.0
+    unidade: m³/s
+    titulo: Vazão máxima turbinada 688 m³/s
+    fonte: "Outorga ANA nº 188/2021, art. 1º, IX"
+    vigencia: permanente
+  # ---------------- salto-grande (Outorga ANA nº 2.096/2020, de 06/10/2020)
+  - id: sgr-na-max
+    usina: salto-grande
+    variavel: nivel_montante
+    tipo: maximo
+    valor: 384.67
+    unidade: m
+    titulo: Nível máximo normal a montante 384,67 m
+    fonte: "Outorga ANA nº 2.096/2020, art. 1º, IV"
+    vigencia: permanente
+  - id: sgr-na-min
+    usina: salto-grande
+    variavel: nivel_montante
+    tipo: minimo
+    valor: 381.17
+    unidade: m
+    titulo: Nível mínimo normal a montante 381,17 m
+    fonte: "Outorga ANA nº 2.096/2020, art. 1º, VI"
+    vigencia: permanente
+  - id: sgr-turb-max
+    usina: salto-grande
+    variavel: vazao_turbinada
+    tipo: maximo
+    valor: 572.0
+    unidade: m³/s
+    titulo: Vazão máxima turbinada 572 m³/s
+    fonte: "Outorga ANA nº 2.096/2020, art. 1º, IX"
+    vigencia: permanente
+  - id: sgr-fio
+    usina: salto-grande
+    variavel: defluencia
+    tipo: texto
+    titulo: Operação a fio d'água, com vazões defluentes, após a restituição da casa de força, iguais às vazões afluentes
+    fonte: "Outorga ANA nº 2.096/2020, art. 1º, X"
+    vigencia: permanente
+  # ---------------- canoas-ii (Outorga ANA nº 1.186/2021, de 06/07/2021)
+  - id: cn2-na-max
+    usina: canoas-ii
+    variavel: nivel_montante
+    tipo: maximo
+    valor: 366.0
+    unidade: m
+    titulo: Nível máximo normal a montante 366,00 m
+    fonte: "Outorga ANA nº 1.186/2021, art. 1º, IV"
+    vigencia: permanente
+  - id: cn2-na-min
+    usina: canoas-ii
+    variavel: nivel_montante
+    tipo: minimo
+    valor: 365.0
+    unidade: m
+    titulo: Nível mínimo normal a montante 365,00 m
+    fonte: "Outorga ANA nº 1.186/2021, art. 1º, VI"
+    vigencia: permanente
+  - id: cn2-turb-max
+    usina: canoas-ii
+    variavel: vazao_turbinada
+    tipo: maximo
+    valor: 663.0
+    unidade: m³/s
+    titulo: Vazão máxima turbinada 663 m³/s
+    fonte: "Outorga ANA nº 1.186/2021, art. 1º, IX"
+    vigencia: permanente
+  # ---------------- canoas-i (Outorga ANA nº 1.185/2021, de 06/07/2021)
+  - id: cn1-na-max
+    usina: canoas-i
+    variavel: nivel_montante
+    tipo: maximo
+    valor: 351.0
+    unidade: m
+    titulo: Nível máximo normal a montante 351,00 m
+    fonte: "Outorga ANA nº 1.185/2021, art. 1º, IV"
+    vigencia: permanente
+  - id: cn1-na-min
+    usina: canoas-i
+    variavel: nivel_montante
+    tipo: minimo
+    valor: 350.0
+    unidade: m
+    titulo: Nível mínimo normal a montante 350,00 m
+    fonte: "Outorga ANA nº 1.185/2021, art. 1º, VI"
+    vigencia: permanente
+  - id: cn1-turb-max
+    usina: canoas-i
+    variavel: vazao_turbinada
+    tipo: maximo
+    valor: 663.0
+    unidade: m³/s
+    titulo: Vazão máxima turbinada 663 m³/s
+    fonte: "Outorga ANA nº 1.185/2021, art. 1º, IX"
+    vigencia: permanente
+  # ---------------- capivara (Outorga ANA nº 1.385/2021, de 27/07/2021)
+  - id: cap-na-max
+    usina: capivara
+    variavel: nivel_montante
+    tipo: maximo
+    valor: 334.0
+    unidade: m
+    titulo: Nível máximo normal a montante 334,00 m
+    fonte: "Outorga ANA nº 1.385/2021, art. 1º, IV"
+    vigencia: permanente
+  - id: cap-na-min
+    usina: capivara
+    variavel: nivel_montante
+    tipo: minimo
+    valor: 321.0
+    unidade: m
+    titulo: Nível mínimo normal a montante 321,00 m
+    fonte: "Outorga ANA nº 1.385/2021, art. 1º, VI"
+    vigencia: permanente
+  - id: cap-turb-max
+    usina: capivara
+    variavel: vazao_turbinada
+    tipo: maximo
+    valor: 1556.0
+    unidade: m³/s
+    titulo: Vazão máxima turbinada 1.556 m³/s
+    fonte: "Outorga ANA nº 1.385/2021, art. 1º, IX"
+    vigencia: permanente
+  # ---------------- taquarucu (Outorga ANA nº 1.386/2021, de 27/07/2021)
+  - id: taq-na-max
+    usina: taquarucu
+    variavel: nivel_montante
+    tipo: maximo
+    valor: 284.0
+    unidade: m
+    titulo: Nível máximo normal a montante 284,00 m
+    fonte: "Outorga ANA nº 1.386/2021, art. 1º, IV"
+    vigencia: permanente
+  - id: taq-na-min
+    usina: taquarucu
+    variavel: nivel_montante
+    tipo: minimo
+    valor: 282.0
+    unidade: m
+    titulo: Nível mínimo normal a montante 282,00 m
+    fonte: "Outorga ANA nº 1.386/2021, art. 1º, VI"
+    vigencia: permanente
+  - id: taq-turb-max
+    usina: taquarucu
+    variavel: vazao_turbinada
+    tipo: maximo
+    valor: 2935.0
+    unidade: m³/s
+    titulo: Vazão máxima turbinada 2.935 m³/s
+    fonte: "Outorga ANA nº 1.386/2021, art. 1º, IX"
+    vigencia: permanente
+  # ---------------- rosana (Outorga ANA nº 1.384/2021, de 27/07/2021)
+  - id: ros-na-max
+    usina: rosana
+    variavel: nivel_montante
+    tipo: maximo
+    valor: 258.0
+    unidade: m
+    titulo: Nível máximo normal a montante 258,00 m
+    fonte: "Outorga ANA nº 1.384/2021, art. 1º, IV"
+    vigencia: permanente
+  - id: ros-na-min
+    usina: rosana
+    variavel: nivel_montante
+    tipo: minimo
+    valor: 256.0
+    unidade: m
+    titulo: Nível mínimo normal a montante 256,00 m
+    fonte: "Outorga ANA nº 1.384/2021, art. 1º, VI"
+    vigencia: permanente
+  - id: ros-turb-max
+    usina: rosana
+    variavel: vazao_turbinada
+    tipo: maximo
+    valor: 2500.0
+    unidade: m³/s
+    titulo: Vazão máxima turbinada 2.500 m³/s
+    fonte: "Outorga ANA nº 1.384/2021, art. 1º, IX"
+    vigencia: permanente
+  # ---------------- Resolução ANA nº 132/2022: faixas de operação por nível e vazão defluente máxima média semanal
+  # Cada faixa vale do seu nível (nivel_de, inclusive) até o nível da faixa de cima. A faixa é definida a cada semana
+  # operativa (sábado a sexta) pela situação do reservatório na sexta-feira anterior (art. 8º); tolerância de 5% sobre
+  # as vazões (art. 10). A resolução não diz a hora da consulta de sexta: o painel usa o nível diário do ONS da sexta.
+  - id: jur-faixas
+    usina: jurumirim
+    variavel: defluencia
+    tipo: faixas
+    titulo: Faixas de operação por nível do reservatório, com vazão defluente máxima média semanal em cada faixa
+    fonte: "Resolução ANA nº 132/2022, arts. 2º e 3º, 8º e 10"
+    vigencia: desde 01/01/2023
+    tolerancia_pct: 5
+    faixas:
+      - {nome: Normal, nivel_de: 563.35, vu_pct: 40, qmax_semanal: null}
+      - {nome: Atenção, nivel_de: 562.48, vu_pct: 30, qmax_semanal: 182}
+      - {nome: Alerta, nivel_de: 562.04, vu_pct: 25, qmax_semanal: 147}
+      - {nome: Restrição, nivel_de: 559.7, vu_pct: 0, qmax_semanal: 90}
+  - id: chv-faixas
+    usina: chavantes
+    variavel: defluencia
+    tipo: faixas
+    titulo: Faixas de operação por nível do reservatório, com vazão defluente máxima média semanal em cada faixa
+    fonte: "Resolução ANA nº 132/2022, arts. 4º e 5º, 8º e 10"
+    vigencia: desde 01/01/2023
+    tolerancia_pct: 5
+    faixas:
+      - {nome: Normal, nivel_de: 469.06, vu_pct: 40, qmax_semanal: null}
+      - {nome: Atenção, nivel_de: 468.15, vu_pct: 30, qmax_semanal: 322}
+      - {nome: Alerta, nivel_de: 467.21, vu_pct: 20, qmax_semanal: 161}
+      - {nome: Restrição, nivel_de: 465.23, vu_pct: 0, qmax_semanal: 127}
+  - id: cap-faixas
+    usina: capivara
+    variavel: defluencia
+    tipo: faixas
+    titulo: Faixas de operação por nível do reservatório, com vazão defluente máxima média semanal em cada faixa
+    fonte: "Resolução ANA nº 132/2022, arts. 6º e 7º, 8º e 10"
+    vigencia: desde 01/01/2023
+    tolerancia_pct: 5
+    faixas:
+      - {nome: Normal, nivel_de: 327.11, vu_pct: 40, qmax_semanal: null}
+      - {nome: Atenção, nivel_de: 324.27, vu_pct: 20, qmax_semanal: 990}
+      - {nome: Alerta, nivel_de: 323.5, vu_pct: 15, qmax_semanal: 730}
+      - {nome: Restrição, nivel_de: 321.0, vu_pct: 0, qmax_semanal: 405}

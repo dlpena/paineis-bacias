@@ -1,0 +1,58 @@
+# Identidade e parâmetros da bacia do Paranapanema. Os textos entram nas páginas por coleta/publica_paginas.py.
+slug: paranapanema
+nome: Paranapanema
+rio: rio Paranapanema
+nom_bacia_ons: PARANAPANEMA
+sin_svg: PARANAPANEMA
+dme_cd: "11149"
+centro: [-23.0, -50.8]
+zoom: 7
+trecho_padrao: capivara
+titulo_inicio: O rio Paranapanema agora
+apresentacao: >-
+  A bacia do Paranapanema, da cabeceira no sul de São Paulo ao rio Paraná, na divisa com Mato Grosso do Sul: onze usinas
+  do ONS em cascata no rio principal, mais Mauá no rio Tibagi, e as estações fluviométricas da ANA, com o valor da
+  última hora. Passe o mouse para ler cada ponto.
+resumo_inicial: >-
+  Da cabeceira no sul de São Paulo ao rio Paraná: onze usinas em cascata na divisa SP/PR, mais Mauá no Tibagi,
+  com as faixas de operação da Resolução ANA nº 132/2022 em Jurumirim, Chavantes e Capivara.
+
+destaque:
+  rotulo: Chegando ao rio Paraná
+  trecho: rosana
+  usina: rosana               # sem estação: a de barramento repetiria a defluência do ONS
+
+hidrografia:                   # nome exato na camada do SNIRH -> [rótulo, classe]
+  Rio Paranapanema: [Rio Paranapanema, principal]
+  Rio Tibagi: [Rio Tibagi, afluente]
+  Rio Itararé: [Rio Itararé, afluente]
+  Rio Pardo: [Rio Pardo, afluente]
+  Rio das Cinzas: [Rio das Cinzas, afluente]
+  Rio Laranjinha: [Rio Laranjinha, afluente]
+  Rio Turvo: [Rio Turvo, afluente]
+  Rio Novo: [Rio Novo, afluente]
+  Rio Apiaí-Guaçu: [Rio Apiaí-Guaçu, afluente]
+  Rio Taquari: [Rio Taquari, afluente]
+  Rio Verde: [Rio Verde, afluente]
+  Rio Pirapó: [Rio Pirapó, afluente]
+
+fontes:
+  usinas: >-
+    Bacia <code>PARANAPANEMA</code>: Jurumirim, Piraju, Paranapanema, Chavantes, Ourinhos, Salto Grande, Canoas II,
+    Canoas I, Capivara, Taquaruçu e Rosana no rio principal, e Gov. Jayme Canet Jr. (Mauá) no rio Tibagi.
+  poligono: >-
+    ANA/SNIRH, serviço "Divisões de bacias hidrográficas", camada Meso Região Hidrográfica, código DME_CD 11149
+    ("Paranapanema"), com 107.375 km² pelo atributo DME_AR_KM2 do próprio serviço.
+  limites: >-
+    Outorgas ANA vigentes, texto lido no DOU em 22/09/2026: nº 219/2021 (Jurumirim), nº 308/2021 (Paranapanema),
+    nº 188/2021 (Chavantes), nº 2.096/2020 (Salto Grande), nº 1.186/2021 (Canoas II), nº 1.185/2021 (Canoas I),
+    nº 1.385/2021 (Capivara), nº 1.386/2021 (Taquaruçu) e nº 1.384/2021 (Rosana); nenhuma fixa vazão mínima defluente.
+    Piraju, Ourinhos e Mauá ficam sem limite: não há outorga da ANA para elas no acervo consultado. Resolução ANA nº
+    132/2022 (condições de operação do Sistema Hídrico do Paranapanema), texto integral lido: faixas de operação por
+    nível em Jurumirim, Chavantes e Capivara, com vazão defluente máxima média semanal em cada faixa, semana de sábado a
+    sexta definida pelo nível da sexta anterior e tolerância de 5%. A resolução não diz a hora da consulta de sexta: o
+    painel usa o nível diário do ONS da sexta. Formulários FSAR-H desta bacia ainda não lidos para o painel.
+  zeros: ""
+rodape_regras: >-
+  Limites lidos nos documentos primários: outorgas ANA de nove usinas e Resolução ANA nº 132/2022; FSAR-H desta bacia
+  ainda não lidos.

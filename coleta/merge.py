@@ -5,7 +5,7 @@
   Climatologia mensal 1998-2024: .../CLIMATOLOGY/MONTHLY_ACCUMULATED/MERGE_CPTEC_acum_{mes}.nc
 
 Grava:
-  dados/merge/mascara.npz              células com peso na bacia (config/bacia_iguacu.geojson): índice, lat/lon, peso em km²
+  dados/merge/mascara.npz              células com peso na bacia (config/<bacia>/bacia.geojson): índice, lat/lon, peso em km²
   dados/merge/chuva_bacia_diaria.csv   data, chuva_mm (média ponderada por área), n_celulas, versao, metodo
   dados/merge/celulas.parquet          data, celula, mm  (valor por célula, últimos 120 dias, para o mapa)
   dados/merge/mlt.json                 MLT mensal oficial na bacia, mesmo método (--mlt, uma vez)
@@ -31,7 +31,8 @@ import requests
 import xarray as xr
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from comum import CONFIG, DADOS, gravar_status, hoje_brt, log  # noqa: E402
+from comum import CACHE, CONFIG, DADOS, gravar_status, hoje_brt, log  # noqa: E402
+import time  # noqa: E402
 from geo import METODO, ler_poligono, pesos  # noqa: E402
 
 URL_DIA = "https://ftp.cptec.inpe.br/modelos/tempo/MERGE/GPM/DAILY/{a}/{m:02d}/MERGE_CPTEC_{a}{m:02d}{d:02d}.grib2"
@@ -39,7 +40,7 @@ PREC = (0, 15, 5)  # disciplina, categoria, número da chuva, conforme o .ctl do
 URL_CLIM = "https://ftp.cptec.inpe.br/modelos/tempo/MERGE/GPM/CLIMATOLOGY/MONTHLY_ACCUMULATED/MERGE_CPTEC_acum_{m}.nc"
 MESES = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
 PASTA = DADOS / "merge"
-GEOJSON = CONFIG / "bacia_iguacu.geojson"
+GEOJSON = CONFIG / "bacia.geojson"
 CSV = PASTA / "chuva_bacia_diaria.csv"
 CELULAS = PASTA / "celulas.parquet"
 MASCARA = PASTA / "mascara.npz"
@@ -155,12 +156,19 @@ def processa_dias(dias: list[date]) -> tuple[int, list[str], dict]:
         if d in feitos and d < limite_refaz:
             continue
         try:
-            r = sess.get(URL_DIA.format(a=d.year, m=d.month, d=d.day), timeout=(10, 90))
-            if r.status_code == 404:
-                falhas.append(f"{d}: ainda não publicado (404)")
-                continue
-            r.raise_for_status()
-            tmp.write_bytes(r.content)
+            # o GRIB é do Brasil inteiro: a rodada da bacia seguinte reaproveita o arquivo por 30 min
+            cache = CACHE / "merge" / f"MERGE_CPTEC_{d:%Y%m%d}.grib2"
+            if cache.exists() and time.time() - cache.stat().st_mtime < 1800:
+                tmp.write_bytes(cache.read_bytes())
+            else:
+                r = sess.get(URL_DIA.format(a=d.year, m=d.month, d=d.day), timeout=(10, 90))
+                if r.status_code == 404:
+                    falhas.append(f"{d}: ainda não publicado (404)")
+                    continue
+                r.raise_for_status()
+                tmp.write_bytes(r.content)
+                cache.parent.mkdir(parents=True, exist_ok=True)
+                cache.write_bytes(r.content)
             ds, v = abrir_precip(tmp)
             if m is None:
                 m = carregar_mascara(ds)

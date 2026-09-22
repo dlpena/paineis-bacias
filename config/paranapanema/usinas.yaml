@@ -1,0 +1,144 @@
+# Usinas da bacia do Paranapanema no conjunto "dados_hidrologicos_ho" do ONS (nom_bacia = PARANAPANEMA), de montante
+# para jusante no rio principal, e Mauá (Gov. Jayme Canet Jr.) no rio Tibagi, que deságua no reservatório de Capivara.
+# ons / id_ons / cod_usina: lidos no parquet DADOS_HIDROLOGICOS_HO_2026_09 (22/09/2026).
+# tipo e coordenadas: cadastro de reservatórios do ONS (dataset reservatorio, RESERVATORIOS.csv, 22/09/2026),
+# tip_reservatorio "RESERVATÓRIO COM USINA" = acumulacao, "FIO DAGUA" = fio_dagua; val_latitude/val_longitude.
+# estacao_barramento: estação fluviométrica "BARRAMENTO" da própria usina no catálogo da Resolução Conjunta nº 3.
+# nome: como no art. 1º da outorga ANA; Mauá: "UHE GOV. JAYME CANET JUNIOR" (Res. Conjunta nº 3) e "MAUA" (SAR/ANA).
+# agente: titular da outorga ANA lida (repositorio_usina, 22/09/2026); Piraju, Ourinhos e Mauá sem outorga ANA no
+# repositório: agente pelo cadastro SIGA/ANEEL (referencia_usina), a confirmar.
+usinas:
+  - slug: jurumirim
+    ons: JURUMIRIM
+    id_ons: PPJURU
+    cod_usina: 47
+    nome: Jurumirim (Armando Avellanal Laydner)
+    curto: Jurumirim
+    tipo: acumulacao
+    agente: Rio Paranapanema Energia
+    lat: -23.210833
+    lon: -49.229167
+    estacao_barramento: "64215080"
+  - slug: piraju
+    ons: PIRAJU
+    id_ons: PPPJU
+    cod_usina: 48
+    nome: Piraju
+    curto: Piraju
+    tipo: fio_dagua
+    agente: Companhia Brasileira de Alumínio
+    lat: -23.153333
+    lon: -49.380833
+    estacao_barramento: "64219080"
+  - slug: paranapanema
+    ons: PARANAPANEMA
+    id_ons: PPPRNP
+    cod_usina: 53
+    nome: Paranapanema
+    curto: Paranapanema
+    tipo: fio_dagua
+    agente: Enel Green Power Paranapanema
+    lat: -23.18781
+    lon: -49.38451
+    estacao_barramento: "64221000"
+  - slug: chavantes
+    ons: CHAVANTES
+    id_ons: PPCHAV
+    cod_usina: 49
+    nome: Chavantes
+    curto: Chavantes
+    tipo: acumulacao
+    agente: Rio Paranapanema Energia
+    lat: -23.130556
+    lon: -49.733333
+    estacao_barramento: "64270080"
+  - slug: ourinhos
+    ons: OURINHOS
+    id_ons: PPORI
+    cod_usina: 249
+    nome: Ourinhos
+    curto: Ourinhos
+    tipo: fio_dagua
+    agente: Companhia Brasileira de Alumínio
+    lat: -23.067778
+    lon: -49.8375
+    estacao_barramento: "64278080"
+  - slug: salto-grande
+    ons: SALTO GRANDE CS
+    id_ons: PPSGCS
+    cod_usina: 50
+    nome: Lucas Nogueira Garcez (Salto Grande)
+    curto: Salto Grande
+    tipo: fio_dagua
+    agente: Rio Paranapanema Energia
+    lat: -22.901944
+    lon: -49.998889
+    estacao_barramento: "64332080"
+  - slug: canoas-ii
+    ons: CANOAS II
+    id_ons: PPCNO2
+    cod_usina: 51
+    nome: Canoas II
+    curto: Canoas II
+    tipo: fio_dagua
+    agente: Rio Paranapanema Energia
+    lat: -22.937778
+    lon: -50.248889
+    estacao_barramento: "64345075"
+  - slug: canoas-i
+    ons: CANOAS I
+    id_ons: PPCNO1
+    cod_usina: 52
+    nome: Canoas I
+    curto: Canoas I
+    tipo: fio_dagua
+    agente: Rio Paranapanema Energia
+    lat: -22.942222
+    lon: -50.516389
+    estacao_barramento: "64345080"
+  - slug: maua
+    ons: GOV JAYME CANET JR
+    id_ons: PPUHMU
+    cod_usina: 57
+    nome: Gov. Jayme Canet Júnior (Mauá)
+    curto: Mauá
+    tipo: acumulacao
+    agente: Copel Geração e Transmissão
+    lat: -24.0625
+    lon: -50.708056
+    estacao_barramento: "64489000"
+    montante: null            # no rio Tibagi: não há usina do ONS a montante
+  - slug: capivara
+    ons: CAPIVARA
+    id_ons: PPCAPI
+    cod_usina: 61
+    nome: Capivara
+    curto: Capivara
+    tipo: acumulacao
+    agente: Rio Paranapanema Energia
+    lat: -22.661111
+    lon: -51.353889
+    estacao_barramento: "64516080"
+    montante: canoas-i        # no rio principal; Mauá chega pelo Tibagi, como afluente
+  - slug: taquarucu
+    ons: TAQUARUÇU
+    id_ons: PPTAQU
+    cod_usina: 62
+    nome: Taquaruçu
+    curto: Taquaruçu
+    tipo: fio_dagua
+    agente: Rio Paranapanema Energia
+    lat: -22.544722
+    lon: -51.995833
+    estacao_barramento: "64535080"
+  - slug: rosana
+    ons: ROSANA
+    id_ons: PPROSA
+    cod_usina: 63
+    nome: Rosana
+    curto: Rosana
+    tipo: fio_dagua
+    agente: Rio Paranapanema Energia
+    lat: -22.602222
+    lon: -52.868611
+    estacao_barramento: "64571080"
