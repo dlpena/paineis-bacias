@@ -85,7 +85,7 @@
 
     <div class="grade c2 par-alinhado">
       <div><h3>Nível de montante</h3><p class="explica" id="e-niveis"></p><div id="g-niveis" class="grafico baixo"></div></div>
-      <div id="bloco-vu" hidden><h3>Volume útil</h3><p class="explica">Percentual do volume útil do reservatório, dado horário do ONS.</p><div id="g-vu" class="grafico baixo"></div></div>
+      <div id="bloco-vu" hidden><h3>Volume útil</h3><p class="explica" id="explica-vu">Percentual do volume útil do reservatório, dado horário do ONS.</p><div id="g-vu" class="grafico baixo"></div></div>
     </div>
 
     <h3 id="t-rampa">Variação horária</h3>
@@ -310,7 +310,11 @@
       Plotly.react('g-niveis', [traco(x, A.nm, 'Nível montante', SERIES.nivel_montante)], layoutBase({ showlegend: false, yaxis: { title: 'm', gridcolor: PAL.grade, tickformat: ',.2f' }, ...SA(ln) }), CONFIG_PLOT);
       if (U.tipo === 'acumulacao' && A.vu && A.vu.some(v => v !== null)) {
         document.getElementById('bloco-vu').hidden = false;
-        Plotly.react('g-vu', [traco(x, A.vu, 'Volume útil (%)', PAL.escuro, { fill: 'tozeroy', fillcolor: 'rgba(128,181,225,.25)' })], layoutBase({ showlegend: false, yaxis: { title: '%', gridcolor: PAL.grade, range: [0, 100] } }), CONFIG_PLOT);
+        // as mesmas divisas de faixa, no volume útil equivalente que a resolução dá para cada nível
+        const lvu = [];
+        if (rfx) rfx.faixas.slice(0, -1).forEach((f, k) => { if (f.vu_pct === null || f.vu_pct === undefined) return; const l = linhaLimite(f.vu_pct, `${f.nome} ≥ ${fmt(f.vu_pct)}%`, COR_RESOLUCAO, 'dot', k % 2 ? 0.62 : 0.34); lvu.push({ s: l.shape, a: l.ann }); });
+        if (rfx) document.getElementById('explica-vu').textContent = `Percentual do volume útil do reservatório, dado horário do ONS. Linhas pontilhadas roxas: divisas das faixas de operação da ${rfx.fonte.split(',')[0]}, no volume útil que ela declara equivalente a cada nível; a faixa é definida pelo nível (gráfico acima).`;
+        Plotly.react('g-vu', [traco(x, A.vu, 'Volume útil (%)', PAL.escuro, { fill: 'tozeroy', fillcolor: 'rgba(128,181,225,.25)' })], layoutBase({ showlegend: false, yaxis: { title: '%', gridcolor: PAL.grade, range: [0, 100] }, ...SA(lvu) }), CONFIG_PLOT);
       }
       const rr = regras.find(q => q.tipo === 'rampa'); const base = rr && rr.variavel === 'vazao_turbinada' ? A.tu : A.de;
       const dif = base.map((v, i) => (i && v !== null && base[i - 1] !== null) ? v - base[i - 1] : null);
