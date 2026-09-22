@@ -1,28 +1,8 @@
 {
  "ok": true,
  "arquivos": [
-  "ho_2025-01",
-  "ho_2025-02",
-  "ho_2025-03",
-  "ho_2025-04",
-  "ho_2025-05",
-  "ho_2025-06",
-  "ho_2025-07",
-  "ho_2025-08",
-  "ho_2025-09",
-  "ho_2025-10",
-  "ho_2025-11",
-  "ho_2025-12",
-  "ho_2026-01",
-  "ho_2026-02",
-  "ho_2026-03",
-  "ho_2026-04",
-  "ho_2026-05",
-  "ho_2026-06",
-  "ho_2026-07",
   "ho_2026-08",
   "ho_2026-09",
-  "di_2025",
   "di_2026"
  ],
  "erros": [],
@@ -33,7 +13,7 @@
   "CHAVANTES": "2026-09-22T15:00:00",
   "GOV JAYME CANET JR": "2026-09-22T16:00:00",
   "JURUMIRIM": "2026-09-22T15:00:00",
-  "OURINHOS": "2026-09-22T16:00:00",
+  "OURINHOS": "2026-09-22T17:00:00",
   "PARANAPANEMA": "2026-09-22T17:00:00",
   "PIRAJU": "2026-09-22T14:00:00",
   "ROSANA": "2026-09-22T15:00:00",
@@ -42,5 +22,5 @@
  },
  "citacao_ho": "ONS, Dados Abertos, conjunto \"Dados Hidráulicos por Reservatório – Base horária\" (https://dados.ons.org.br/dataset/dados_hidrologicos_ho)",
  "citacao_di": "ONS, Dados Abertos, conjunto \"Dados Hidráulicos por Reservatório – Base diária\" (https://dados.ons.org.br/dataset/dados-hidrologicos-res)",
- "atualizado_em": "2026-09-22T17:28:32-03:00"
+ "atualizado_em": "2026-09-22T17:41:22-03:00"
 }
