@@ -44,11 +44,11 @@ async function desenharHidrografia(mapa, escala = 1, interativa = true) {
 const LEGENDA_HIDRO = '<i style="background:#0B6BA8;height:3px;border-radius:0"></i>' + BACIA.rio + '<br><i style="background:#3FB0E8;height:2px;border-radius:0"></i>afluente monitorado';
 
 /* legenda do esquema longitudinal (início e trecho) */
-function legendaEsquema(temRamal = false) {
+function legendaEsquema(temRamal = false, temConfluencia = false) {
   const tri = '<svg width="15" height="13" viewBox="0 0 18 16"><path d="M9 1 L17 15 L1 15 Z" fill="#294086"/></svg>';
   const cir = '<svg width="13" height="13" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#294086"/></svg>';
   const pto = c => `<svg width="11" height="11" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="${c}"/></svg>`;
-  const afl = '<svg width="22" height="11" viewBox="0 0 22 11"><path d="M1 2 L20 9" stroke="#80B5E1" stroke-width="2.5" stroke-dasharray="3 3"/></svg>';
+  const afl = '<svg width="22" height="16" viewBox="0 0 22 16"><path d="M0 2 H22" stroke="#80B5E1" stroke-width="3"/><path d="M9 3 L12 12" stroke="#80B5E1" stroke-width="2" stroke-dasharray="2.5 2"/><circle cx="12" cy="12.5" r="3" fill="#2E8B57"/></svg>';
   const item = (icone, texto) => `<div class="li"><span class="ic">${icone}</span><span>${texto}</span></div>`;
   return `<div class="legenda-esquema">
     <div class="grupo"><div class="tit">Símbolos</div>
@@ -56,6 +56,7 @@ function legendaEsquema(temRamal = false) {
       ${item(cir, "UHE a fio d'água · número acima: defluência (m³/s)")}
       ${item(pto('#0193DE'), 'estação fluviométrica · número: vazão (m³/s)')}
       ${item(afl, 'afluente · margem direita acima do rio, margem esquerda abaixo')}
+      ${temConfluencia ? item('<svg width="26" height="20" viewBox="0 0 26 20"><path d="M0 2 H26" stroke="#80B5E1" stroke-width="3"/><path d="M8 3 V9 M8 9 L9 16 M8 9 L20 13" stroke="#80B5E1" stroke-width="2" stroke-dasharray="2.5 2" fill="none"/><circle cx="9" cy="16.5" r="2.6" fill="#2E8B57"/><circle cx="20.5" cy="13" r="2.6" fill="#2E8B57"/></svg>', 'afluente de afluente · os dois se juntam antes de chegar ao rio') : ''}
       ${temRamal ? item('<svg width="22" height="14" viewBox="0 0 22 14"><path d="M21 12 H8 Q3 12 3 7 V1" stroke="#80B5E1" stroke-width="3" fill="none"/></svg>', 'afluente com usina · braço paralelo ao rio, que sobe até a confluência; clique para abrir o trecho do afluente') : ''}
     </div>
     <div class="grupo"><div class="tit">Idade do dado</div>
@@ -79,7 +80,8 @@ function desenharEsquema(el, todos, destaque = null) {
   const unico = trechos.length === 1;
   const temSul = trechos.some(t => t.estacoes.some(e => e.papel === 'afluente' && e.margem === 'esquerda' && e.esquema !== false)) || ramais.some(r => r.margem === 'esquerda');
   // margem direita maior: os nomes das estações descem inclinados para a direita e a primeira coluna (cabeceira) fica na borda
-  const COL = 56, MARG = unico ? 64 : 28, MARG_D = unico ? 64 : 128, Y = 180, H = temSul ? 402 : 298;
+  const COL = 56, MARG = unico ? 64 : 28, MARG_D = unico ? 64 : 128, Y = 180;
+  let H = temSul ? 402 : 298;
   const cols = []; // {tipo, x, ...}
   trechos.forEach(t => {
     const ini = cols.length;
@@ -102,13 +104,32 @@ function desenharEsquema(el, todos, destaque = null) {
     });
     principais.forEach(e => {
       if (e.papel === 'jusante' && t.usina && !usinaInserida) { cols.push({ tipo: 'usina', t, u: t.usina, barr }); usinaInserida = true; }
-      cols.push({ tipo: e.papel === 'afluente' ? 'afluente' : 'regua', t, e });
+      if (e.papel !== 'afluente') { cols.push({ tipo: 'regua', t, e }); return; }
+      // afluentes vizinhos do mesmo lado: o de jusante (à esquerda) fica mais longe do rio, para que o nome de um,
+      // inclinado para a direita, passe por cima da linha do outro; um terceiro seguido ganha uma coluna livre antes
+      const ant = cols[cols.length - 1], c = { tipo: 'afluente', t, e, nivel: 0 };
+      if (ant && ant.tipo === 'afluente' && (ant.e.margem === 'esquerda') === (e.margem === 'esquerda')) {
+        if (ant.nivel) cols.push({ tipo: 'vazio', t }); else c.nivel = 1;
+      }
+      cols.push(c);
     });
     if (t.usina && !usinaInserida) cols.push({ tipo: 'usina', t, u: t.usina, barr });
     if (!principais.length && !t.usina && barr) cols.push({ tipo: 'regua', t, e: barr });
     if (cols.length - ini < 2) cols.push({ tipo: 'vazio', t }); // faixa mínima de 2 colunas para caber o nome
     t._ini = ini; t._fim = cols.length;
   });
+  // afluente que deságua em outro afluente monitorado (desagua_em): os dois formam um grupo, com um tronco até o rio
+  cols.forEach((c, i) => {
+    if (c.tipo !== 'afluente' || !c.e.desagua_em) return;
+    const p = cols.findIndex(o => o.tipo === 'afluente' && o.t === c.t && o.e.rio_afluente === c.e.desagua_em);
+    if (p < 0) return;
+    const g = cols[p].grupo || { membros: [p] };
+    g.membros.push(i); cols[p].grupo = g; c.grupo = g;
+  });
+  cols.forEach(c => { if (c.grupo) c.grupo.ultimo = Math.max(...c.grupo.membros); });
+  const yAfl = c => c.e.margem === 'esquerda' ? Y + 150 + 34 * c.nivel : Y - 80 - 32 * c.nivel;
+  // altura: cabe o nome inclinado (20°) das estações de afluente abaixo do rio
+  cols.forEach(c => { if (c.tipo === 'afluente' && c.e.margem === 'esquerda') H = Math.max(H, yAfl(c) + 14 + c.e.curto.length * 5.5 * 0.34); });
   const W = MARG + MARG_D + cols.length * COL;
   const x = i => W - (MARG_D + i * COL + COL / 2); // espelhado: cabeceira à direita, foz à esquerda, como no mapa
   const cor = h => ({ ok: '#2E8B57', aviso: '#D9A400', off: '#9CA3AF' }[frescorClasse(h)]);
@@ -150,9 +171,9 @@ function desenharEsquema(el, todos, destaque = null) {
   });
   s += unico
     ? `<text x="${W - 4}" y="${Y + 4}" font-size="10" fill="#6B7280" text-anchor="end">montante</text><text x="${4}" y="${Y + 4}" font-size="10" fill="#6B7280">← jusante</text>`
-    : `<text x="${W - MARG_D}" y="${Y + 22}" font-size="10" fill="#6B7280" text-anchor="end">cabeceira (montante)</text><text x="${MARG}" y="${Y + 22}" font-size="10" fill="#6B7280">← sentido do rio · foz (jusante)</text>`;
+    : `<text x="${W - MARG_D + 10}" y="${Y + 4}" font-size="10" fill="#6B7280">cabeceira</text>`;
   cols.forEach((c, i) => {
-    const cx = x(i);
+    let cx = x(i);
     if (c.tipo === 'vazio') {
       return;
     } else if (c.tipo === 'ramal_est') {
@@ -175,17 +196,34 @@ defluência ${fmt(a.defluencia)} m³/s${acum ? ' · volume útil ' + fmt(a.pct_v
 clique para abrir o trecho</title></a>`;
     } else if (c.tipo === 'afluente') {
       // margem direita (norte) acima do rio, margem esquerda (sul) abaixo, como no mapa com o norte para cima;
-      // afluentes vizinhos do mesmo lado alternam altura para os nomes não se cruzarem
-      const e = c.e, sul = e.margem === 'esquerda';
-      const alto = cols[i + 1] && cols[i + 1].tipo === 'afluente' && ((cols[i + 1].e.margem === 'esquerda') === sul);
-      const dist = alto ? 112 : 80, cy = sul ? Y + 150 + (alto ? 34 : 0) : Y - dist;
-      const alvo = x(i + (alto ? 2 : 1)) - 4;
-      s += `<a href="estacao.html?c=${e.codigo}"><path d="M${cx} ${cy} L${alvo} ${sul ? Y + 3 : Y - 3}" stroke="#80B5E1" stroke-width="2.5" fill="none" stroke-dasharray="3 3"/>`;
+      // a linha chega ao rio logo a jusante da própria coluna; abaixo do rio, desvia do nome inclinado do vizinho da esquerda
+      const e = c.e, sul = e.margem === 'esquerda', g = c.grupo, cy = yAfl(c);
+      // deslocamento da coluna para a direita quando o nome inclinado (45°) do vizinho de jusante, abaixo do rio, invadiria a linha
+      const desloca = k => {
+        const v = cols[k + 1];
+        const nome = v && (v.tipo === 'regua' ? [v.e.curto, 10.5] : v.tipo === 'usina' ? [v.u.curto, 11] : null);
+        if (!(cols[k].e.margem === 'esquerda') || !nome) return 0;
+        return Math.max(0, Math.min(COL * 0.4, x(k + 1) + 3 + nome[0].length * nome[1] * 0.6 * 0.707 + 16 - (x(k) - 8)));
+      };
+      const xRio = k => x(k) - 8 + desloca(k);
+      cx += desloca(i);
+      if (g) {
+        // afluente de afluente: cada estação liga à confluência dos dois; o tronco, desenhado uma vez, segue até o rio principal
+        const xj = xRio(g.ultimo), yj = sul ? Y + 116 : Y - 46;
+        if (i === g.ultimo) {
+          const nomes = g.membros.map(k => cols[k].e.rio_afluente).filter(Boolean);
+          s += `<path d="M${xj} ${yj} L${xj} ${sul ? Y + 3 : Y - 3}" stroke="#80B5E1" stroke-width="3.5" fill="none" stroke-dasharray="4 3"><title>${esc(nomes.join(' e '))}: juntam-se antes de chegar ao ${esc(BACIA.rio)}</title></path>`;
+          s += `<circle cx="${xj}" cy="${yj}" r="3" fill="#80B5E1"/>`;
+        }
+        s += `<a href="estacao.html?c=${e.codigo}"><path d="M${cx} ${cy} L${xj} ${yj}" stroke="#80B5E1" stroke-width="2.5" fill="none" stroke-dasharray="3 3"/>`;
+      } else {
+        s += `<a href="estacao.html?c=${e.codigo}"><path d="M${cx} ${cy} L${xRio(i)} ${sul ? Y + 3 : Y - 3}" stroke="#80B5E1" stroke-width="2.5" fill="none" stroke-dasharray="3 3"/>`;
+      }
       s += `<circle cx="${cx}" cy="${cy}" r="6" fill="${cor(e.frescor_h)}" stroke="#fff" stroke-width="1.5"/>`;
       s += `<text x="${cx - 9}" y="${cy + 4}" font-size="11.5" text-anchor="end" fill="#1F2937">${fmt(e.vazao)}</text>`;
       s += sul ? `<text transform="translate(${cx + 8} ${cy + 6}) rotate(20)" font-size="10" fill="#6B7280">${esc(e.curto)}</text>`
                : `<text transform="translate(${cx + 8} ${cy - 2}) rotate(-20)" font-size="10" fill="#6B7280">${esc(e.curto)}</text>`;
-      s += `<title>${esc(e.curto)} (${e.codigo}) · ${PAPEL[e.papel]}${e.rio_afluente ? ' · ' + e.rio_afluente : ''}\n${fmt(e.vazao)} m³/s · ${frescorTexto(e.frescor_h)}</title></a>`;
+      s += `<title>${esc(e.curto)} (${e.codigo}) · ${PAPEL[e.papel]}${e.rio_afluente ? ' · ' + e.rio_afluente : ''}${e.desagua_em ? ', que deságua no ' + e.desagua_em : ''}\n${fmt(e.vazao)} m³/s · ${frescorTexto(e.frescor_h)}</title></a>`;
     } else if (c.tipo === 'regua') {
       const e = c.e;
       s += `<a href="estacao.html?c=${e.codigo}"><circle cx="${cx}" cy="${Y}" r="7" fill="${cor(e.frescor_h)}" stroke="#fff" stroke-width="2"/>`;

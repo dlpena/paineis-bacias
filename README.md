@@ -48,7 +48,9 @@ python -m http.server 8767 --directory docs
 4. `config/<slug>/estacoes.csv`: estações da Res. nº 3 que o painel acompanha (telemétricas em operação).
 5. `config/<slug>/trechos.yaml`: o desenho do rio, de montante para jusante, com o papel de cada estação, a margem
    dos afluentes e o que chega e o que sai de cada trecho. Usina num afluente vira trecho com `ramal_de:` (no
-   diagrama, braço paralelo ao rio principal, como o ONS desenha).
+   diagrama, braço paralelo ao rio principal, como o ONS desenha). Afluente que deságua em outro afluente monitorado leva
+   `desagua_em:` com o rio de destino (conferir a confluência na hidrografia do SNIRH); no diagrama os dois se juntam
+   num tronco antes de chegar ao rio.
 6. `config/<slug>/condicionantes.yaml`: só limites lidos em documento primário (outorga, resolução, FSAR-H).
 7. `BACIA=<slug> python coleta/hidrografia.py`, depois a coleta; acrescentar a bacia em `config/bacias.yaml`.
 

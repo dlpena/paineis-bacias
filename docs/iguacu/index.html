@@ -38,7 +38,7 @@
   await iniciar('index.html');
   const [B, C] = await Promise.all([carregar('bacia.json'), carregar('chuva.json')]);
   desenharEsquema(document.getElementById('esquema'), B.trechos);
-  document.getElementById('legenda-esquema').innerHTML = legendaEsquema(B.trechos.some(t => t.ramal_de));
+  document.getElementById('legenda-esquema').innerHTML = legendaEsquema(B.trechos.some(t => t.ramal_de), B.trechos.some(t => t.estacoes.some(e => e.desagua_em && e.esquema !== false)));
 
   // ---- cartões
   const ac = C.acumulados || {};

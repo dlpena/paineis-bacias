@@ -4,6 +4,9 @@
 # papel: montante | afluente | barramento | jusante. chega/sai: o ponto do rio mais a montante e o mais a jusante.
 # margem (afluentes): direita = norte (lado paulista), esquerda = sul (lado paranaense), olhando para jusante; calculada
 # em 22/09/2026 pela posição da estação em relação ao traçado do rio Paranapanema no SNIRH.
+# desagua_em (afluentes): o afluente chega a outro afluente monitorado, e não ao rio principal; no diagrama os dois
+# se juntam antes do rio. Confluências conferidas em 22/09/2026 na hidrografia do SNIRH (config/paranapanema/hidrografia.geojson):
+# Verde no Itararé, Turvo no Pardo e Laranjinha no Cinzas, todas a jusante das estações.
 # ramal_de: trecho num afluente (Mauá, no rio Tibagi); no diagrama da bacia aparece como ramal que chega ao trecho indicado.
 trechos:
   - slug: jurumirim
@@ -51,7 +54,7 @@ trechos:
     contexto: "Segundo reservatório de acumulação, onde chega o rio Itararé pela margem esquerda. A Resolução ANA nº 132/2022 fixa faixas de operação para Chavantes."
     estacoes:
       - {codigo: "64247000", papel: afluente, curto: "Olaria dos Padres (Itararé)", rio: "rio Itararé", margem: esquerda}
-      - {codigo: "64250010", papel: afluente, curto: "Itaporanga (Verde)", rio: "rio Verde", margem: esquerda}
+      - {codigo: "64250010", papel: afluente, curto: "Itaporanga (Verde)", rio: "rio Verde", margem: esquerda, desagua_em: "rio Itararé"}
       - {codigo: "64270080", papel: barramento, curto: "Barramento Chavantes"}
     pluviometros: ["2349042", "2449067", "2349076", "2349068", "2349023"]
   - slug: ourinhos
@@ -74,7 +77,7 @@ trechos:
     contexto: "Fio d'água onde entram, pela margem direita, os rios Pardo, Turvo e Novo, do lado paulista."
     estacoes:
       - {codigo: "64320010", papel: afluente, curto: "Santa Cruz do Rio Pardo (Pardo)", rio: "rio Pardo", margem: direita}
-      - {codigo: "64328050", papel: afluente, curto: "Fazenda da Barra (Turvo)", rio: "rio Turvo", margem: direita}
+      - {codigo: "64328050", papel: afluente, curto: "Fazenda da Barra (Turvo)", rio: "rio Turvo", margem: direita, desagua_em: "rio Pardo"}
       - {codigo: "64334000", papel: afluente, curto: "Rio Novo", rio: "rio Novo", margem: direita}
       - {codigo: "64332080", papel: barramento, curto: "Barramento Salto Grande"}
     pluviometros: ["2250089", "2249109", "2249113", "2249110"]
@@ -125,7 +128,7 @@ trechos:
     contexto: "Terceiro reservatório de acumulação e o maior da cascata (10.540 hm³ de volume máximo no cadastro de reservatórios do ONS), onde chegam pela margem esquerda o Cinzas, o Laranjinha e o Tibagi (com Mauá). A Resolução ANA nº 132/2022 fixa faixas de operação para Capivara."
     estacoes:
       - {codigo: "64370000", papel: afluente, curto: "Andirá (Cinzas)", rio: "rio das Cinzas", margem: esquerda}
-      - {codigo: "64390000", papel: afluente, curto: "Porto Santa Terezinha (Laranjinha)", rio: "rio Laranjinha", margem: esquerda}
+      - {codigo: "64390000", papel: afluente, curto: "Porto Santa Terezinha (Laranjinha)", rio: "rio Laranjinha", margem: esquerda, desagua_em: "rio das Cinzas"}
       - {codigo: "64507000", papel: afluente, curto: "Jataizinho (Tibagi)", rio: "rio Tibagi", margem: esquerda, esquema: false}  # no diagrama o Tibagi aparece como o ramal de Mauá
       - {codigo: "64516080", papel: barramento, curto: "Barramento Capivara"}
     pluviometros: ["2350002", "2251070", "2350000", "2350001", "2450061"]

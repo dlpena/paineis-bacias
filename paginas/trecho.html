@@ -139,7 +139,7 @@
   const U = T.usina;
   medirBarra(); // depois da trilha: a barra pode ter ganhado altura e quebrado em duas linhas
   desenharEsquema(document.getElementById('esquema'), B.trechos, slug);
-  document.getElementById('legenda-esquema').innerHTML = legendaEsquema(B.trechos.some(t => t.ramal_de));
+  document.getElementById('legenda-esquema').innerHTML = legendaEsquema(B.trechos.some(t => t.ramal_de), B.trechos.some(t => t.estacoes.some(e => e.desagua_em && e.esquema !== false)));
   if (!U) { document.getElementById('lnk-usina').hidden = true; document.getElementById('n-chuva').textContent = '3'; document.getElementById('n-dados').textContent = '4'; }
 
   // ================= 1. Agora
@@ -148,7 +148,7 @@
   R.estacoes.forEach(e => {
     if (e.papel === 'barramento' && U) return; // a estação de barramento aparece dentro do bloco da usina
     cards.push(`<a class="ponto-trecho ${e.papel}" href="estacao.html?c=${e.codigo}">
-      <div class="papel">${PAPEL[e.papel]}${e.rio_afluente ? ' · ' + e.rio_afluente : ''}${e.area_km2 ? ' · ' + fmt(e.area_km2) + ' km²' : ''}</div>
+      <div class="papel">${PAPEL[e.papel]}${e.rio_afluente ? ' · ' + e.rio_afluente : ''}${e.desagua_em ? ', que deságua no ' + e.desagua_em : ''}${e.area_km2 ? ' · ' + fmt(e.area_km2) + ' km²' : ''}</div>
       <div class="nome"><span class="ponto ${frescorClasse(e.frescor_h)}"></span>${e.curto} <small>${e.codigo}${e.ultimo_instante ? ' · ' + fmtInst(e.ultimo_instante) : ''}</small></div>
       <div class="valores">${e.vazao !== null && e.vazao !== undefined ? `<div><div class="var">vazão</div><b>${fmt(e.vazao)}</b> m³/s${tend(e.vazao_6h)}<div class="ref">${refTxt(e.vazao, (e.ref || {}).vazao_media_30d)}</div></div>` : ''}
         ${e.cota_m !== null && e.cota_m !== undefined ? `<div><div class="var">cota</div><b>${fmt(e.cota_m, 2)}</b> m<div class="ref">${(e.ref || {}).cota_media_30d ? 'média 30 d ' + fmt(e.ref.cota_media_30d, 2) + ' m' : 'sem referência'}</div></div>` : ''}
