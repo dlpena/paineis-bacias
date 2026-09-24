@@ -7,20 +7,20 @@
  ],
  "erros": [],
  "ultimo_instante": {
-  "CANOAS I": "2026-09-23T20:00:00",
-  "CANOAS II": "2026-09-23T20:00:00",
-  "CAPIVARA": "2026-09-23T20:00:00",
-  "CHAVANTES": "2026-09-23T20:00:00",
-  "GOV JAYME CANET JR": "2026-09-23T21:00:00",
-  "JURUMIRIM": "2026-09-23T20:00:00",
-  "OURINHOS": "2026-09-23T15:00:00",
-  "PARANAPANEMA": "2026-09-23T22:00:00",
-  "PIRAJU": "2026-09-23T14:00:00",
-  "ROSANA": "2026-09-23T20:00:00",
-  "SALTO GRANDE CS": "2026-09-23T20:00:00",
-  "TAQUARUÇU": "2026-09-23T20:00:00"
+  "CANOAS I": "2026-09-24T01:00:00",
+  "CANOAS II": "2026-09-24T01:00:00",
+  "CAPIVARA": "2026-09-24T01:00:00",
+  "CHAVANTES": "2026-09-24T02:00:00",
+  "GOV JAYME CANET JR": "2026-09-24T03:00:00",
+  "JURUMIRIM": "2026-09-24T02:00:00",
+  "OURINHOS": "2026-09-24T00:00:00",
+  "PARANAPANEMA": "2026-09-24T04:00:00",
+  "PIRAJU": "2026-09-24T04:00:00",
+  "ROSANA": "2026-09-24T02:00:00",
+  "SALTO GRANDE CS": "2026-09-24T02:00:00",
+  "TAQUARUÇU": "2026-09-24T01:00:00"
  },
  "citacao_ho": "ONS, Dados Abertos, conjunto \"Dados Hidráulicos por Reservatório – Base horária\" (https://dados.ons.org.br/dataset/dados_hidrologicos_ho)",
  "citacao_di": "ONS, Dados Abertos, conjunto \"Dados Hidráulicos por Reservatório – Base diária\" (https://dados.ons.org.br/dataset/dados-hidrologicos-res)",
- "atualizado_em": "2026-09-23T22:16:53-03:00"
+ "atualizado_em": "2026-09-24T04:29:27-03:00"
 }
