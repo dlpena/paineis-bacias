@@ -10,11 +10,11 @@
   "CANOAS I": "2026-09-24T16:00:00",
   "CANOAS II": "2026-09-24T16:00:00",
   "CAPIVARA": "2026-09-24T16:00:00",
-  "CHAVANTES": "2026-09-24T16:00:00",
-  "GOV JAYME CANET JR": "2026-09-24T18:00:00",
-  "JURUMIRIM": "2026-09-24T16:00:00",
+  "CHAVANTES": "2026-09-24T17:00:00",
+  "GOV JAYME CANET JR": "2026-09-24T21:00:00",
+  "JURUMIRIM": "2026-09-24T17:00:00",
   "OURINHOS": "2026-09-24T15:00:00",
-  "PARANAPANEMA": "2026-09-24T19:00:00",
+  "PARANAPANEMA": "2026-09-24T22:00:00",
   "PIRAJU": "2026-09-24T14:00:00",
   "ROSANA": "2026-09-24T16:00:00",
   "SALTO GRANDE CS": "2026-09-24T16:00:00",
@@ -22,5 +22,5 @@
  },
  "citacao_ho": "ONS, Dados Abertos, conjunto \"Dados Hidráulicos por Reservatório – Base horária\" (https://dados.ons.org.br/dataset/dados_hidrologicos_ho)",
  "citacao_di": "ONS, Dados Abertos, conjunto \"Dados Hidráulicos por Reservatório – Base diária\" (https://dados.ons.org.br/dataset/dados-hidrologicos-res)",
- "atualizado_em": "2026-09-24T19:11:28-03:00"
+ "atualizado_em": "2026-09-24T22:19:50-03:00"
 }
