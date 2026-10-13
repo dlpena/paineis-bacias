@@ -1,1 +1,1 @@
-{"gerado_em":"2026-10-13T16:11","avisos":[{"nivel":"fonte","estacao":"64250010","trecho":"chavantes","curto":"UHE CHAVANTES ITAPORANGA","quando":"2026-10-11T12:00","texto":"Estação 64250010 (UHE CHAVANTES ITAPORANGA) sem transmitir há 52.2 h.","regra":"frescor","fonte":"telemetria ANA"}]}
+{"gerado_em":"2026-10-13T20:19","avisos":[{"nivel":"fonte","usina":"piraju","trecho":"piraju","curto":"Piraju","quando":"2026-10-13T20:19","texto":"ONS sem dado horário de Piraju há 5.3 h.","regra":"frescor","fonte":"ONS dados abertos"}]}
