@@ -1,1 +1,1 @@
-{"gerado_em":"2026-10-21T15:36","avisos":[{"nivel":"fonte","estacao":"2448072","trecho":"canoas-i","curto":"UHE CANOAS I BAIRRO CANTAGALO","quando":"2026-10-21T04:00","texto":"Estação 2448072 (UHE CANOAS I BAIRRO CANTAGALO) sem transmitir há 11.6 h.","regra":"frescor","fonte":"telemetria ANA"}]}
+{"gerado_em":"2026-10-21T19:15","avisos":[{"nivel":"fonte","usina":"piraju","trecho":"piraju","curto":"Piraju","quando":"2026-10-21T19:15","texto":"ONS sem dado horário de Piraju há 4.3 h.","regra":"frescor","fonte":"ONS dados abertos"}]}
