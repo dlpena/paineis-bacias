@@ -1,10 +1,8 @@
 {
- "ok": false,
- "dias_novos": 7,
- "ultimo_dia": "2026-10-29",
- "falhas": [
-  "2026-10-30: ConnectTimeout: HTTPSConnectionPool(host='ftp.cptec.inpe.br', port=443): Max retries exceeded with url: /modelos/tempo/MERGE/GPM/DAILY/2026/10/MERGE_CPTEC_20261030.grib2 (Caused by ConnectTimeoutError(<HTTPSConnection(host='ftp.cptec.inpe.br', port=443) at 0x777b6afd1010>, 'Connection to ftp.cptec.inpe.br timed out. (connect timeout=10)'))"
- ],
+ "ok": true,
+ "dias_novos": 8,
+ "ultimo_dia": "2026-10-30",
+ "falhas": [],
  "meta_grib": {
   "time": "2026-10-23T12:00:00.000000000",
   "step": "0 nanoseconds",
@@ -19,5 +17,5 @@
   "area_oficial_km2": 107375.5,
   "dif_area_pct": -0.0
  },
- "atualizado_em": "2026-10-30T12:48:29-03:00"
+ "atualizado_em": "2026-10-30T17:39:30-03:00"
 }
